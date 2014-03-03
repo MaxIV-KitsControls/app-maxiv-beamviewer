@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>682</width>
+    <height>547</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <layout class="QVBoxLayout" name="cameraImageContainer"/>
+     </widget>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>2</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Acquisition</string>
+       </attribute>
+       <layout class="QFormLayout" name="formLayout">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Exposure time (ms)</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="MAXLineEdit" name="acq_expo_time">
+          <property name="inputMask">
+           <string/>
+          </property>
+          <property name="model">
+           <string>acq_expo_time</string>
+          </property>
+          <property name="useParentModel">
+           <bool>false</bool>
+          </property>
+          <property name="autoApply">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="acquire_checkbox">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Acquire images</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Trigger mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Camera type</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="camera_type_label">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="TaurusValueComboBox" name="trigger_mode_combobox">
+          <property name="autoApply">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="TaurusLabel" name="acq_status_label"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Status</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="MAXLineEdit" name="gain_label"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Gain</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Image</string>
+       </attribute>
+       <layout class="QFormLayout" name="formLayout_2">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Image width</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="TaurusLabel" name="image_width_label"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Image height</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="TaurusLabel" name="image_height_label"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Rotation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="TaurusValueComboBox" name="image_rotation_combobox">
+          <property name="autoApply">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Binning</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QSpinBox" name="image_bin_spinbox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>BPM</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QFormLayout" name="formLayout_3">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>ROI</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="TaurusLabel" name="roi_label"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Auto ROI</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="TaurusValueCheckBox" name="auto_roi_checkbox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="showText">
+             <bool>false</bool>
+            </property>
+            <property name="autoApply">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>BeamIntensity</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="TaurusLabel" name="taurusLabel">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Beam center X</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="TaurusLabel" name="beam_center_x_label">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Beam center Y</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="TaurusLabel" name="beam_center_y_label">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Beam FWHM X</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="TaurusLabel" name="beam_fwhm_x_label">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>Beam FWHM Y</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="TaurusLabel" name="beam_fwhm_y_label">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="bpm_layout"/>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TaurusLabel</class>
+   <extends>QLabel</extends>
+   <header>taurus.qt.qtgui.display</header>
+  </customwidget>
+  <customwidget>
+   <class>TaurusValueLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>taurus.qt.qtgui.input</header>
+  </customwidget>
+  <customwidget>
+   <class>MAXLineEdit</class>
+   <extends>TaurusValueLineEdit</extends>
+   <header>maxwidgets.input</header>
+  </customwidget>
+  <customwidget>
+   <class>TaurusValueComboBox</class>
+   <extends>QComboBox</extends>
+   <header>taurus.qt.qtgui.input</header>
+  </customwidget>
+  <customwidget>
+   <class>TaurusValueCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>taurus.qt.qtgui.input</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
