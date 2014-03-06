@@ -295,7 +295,12 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.trigger_mode_combobox.addValueNames(zip(self.allowed_trigger_modes, self.allowed_trigger_modes))
         self.ui.trigger_mode_combobox.setCurrentIndex(self.yag.TriggerMode)
         self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
-
+        print self.limaccd.camera_type, type(self.limaccd.camera_type)
+        if self.limaccd.camera_type == "Simulator":
+            # This is a tamporary fix: If we're using a simulator, set the depth to
+            # Bpp16, since teh codec doesn't seem to support 32 bit (default).
+            print "simulator"
+            self.yag.getAttribute("ImageType").write(8)
 
         #Image settings
         self.ui.image_width_label.setModel("%s/Width" % yag)
