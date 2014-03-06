@@ -156,6 +156,8 @@ class LimaImageWidget(TaurusWidget):
 
     def handle_roi_change_started(self):
         """Make sure nobody updates the ROI while the user is changing it"""
+        # Note: doesn't actually work, because for some reason the sigRegionChangeStarted event
+        # is not fired by the ROI...
         self._roi_locked = True
 
     def handle_roi_change_finished(self):
