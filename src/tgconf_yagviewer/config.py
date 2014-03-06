@@ -77,11 +77,17 @@ INSTRUMENTS_FROM_POOL = False
 #===============================================================================
 
 
-bpm_settings = PanelDescription(
+camera = PanelDescription(
     'Camera',
     classname="LimaCameraWidget",
     modulename='tgconf_yagviewer.panels',
     model= 'lima/limaccd/1'
+)
+
+yag = PanelDescription(
+    "YAG",
+    classname="TaurusForm",
+    model=["sys/yag/0/Active", "sys/yag/1/Active", "sys/yag/2/Active"]
 )
 
 
