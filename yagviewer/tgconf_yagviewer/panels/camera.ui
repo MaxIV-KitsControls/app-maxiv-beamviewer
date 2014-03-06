@@ -88,7 +88,7 @@
         <item row="0" column="1">
          <widget class="QLabel" name="camera_type_label">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Unknown</string>
           </property>
          </widget>
         </item>
@@ -197,7 +197,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="TaurusLabel" name="roi_label"/>
+           <widget class="TaurusLabel" name="roi_label">
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_15">
@@ -219,77 +223,110 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_17">
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="bpm_show_position_checkbox">
             <property name="text">
-             <string>BeamIntensity</string>
+             <string/>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="TaurusLabel" name="taurusLabel">
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_11">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>Beam center X</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="TaurusLabel" name="beam_center_x_label">
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>Beam center Y</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="TaurusLabel" name="beam_center_y_label">
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Beam FWHM X</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="TaurusLabel" name="beam_fwhm_x_label">
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>Beam FWHM Y</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="TaurusLabel" name="beam_fwhm_y_label">
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             <string>Show beam position</string>
             </property>
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Beam parameters</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="2" column="3">
+              <widget class="TaurusLabel" name="beam_fwhm_x_label">
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Center Y:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Intensity:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="3">
+              <widget class="TaurusLabel" name="beam_fwhm_y_label">
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="TaurusLabel" name="beam_center_x_label">
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Center X:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>FWHM Y:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="TaurusLabel" name="beam_center_y_label">
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="TaurusLabel" name="beam_intensity_label">
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>FWHM X:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="4">
+              <layout class="QVBoxLayout" name="bpm_profile_x_layout"/>
+             </item>
+             <item row="3" column="0" colspan="4">
+              <layout class="QVBoxLayout" name="bpm_profile_y_layout"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
         </item>
         <item>
          <layout class="QVBoxLayout" name="bpm_layout"/>
@@ -326,11 +363,6 @@
    <header>taurus.qt.qtgui.input</header>
   </customwidget>
   <customwidget>
-   <class>MAXLineEdit</class>
-   <extends>TaurusValueLineEdit</extends>
-   <header>maxwidgets.input</header>
-  </customwidget>
-  <customwidget>
    <class>TaurusValueComboBox</class>
    <extends>QComboBox</extends>
    <header>taurus.qt.qtgui.input</header>
@@ -339,6 +371,11 @@
    <class>TaurusValueCheckBox</class>
    <extends>QCheckBox</extends>
    <header>taurus.qt.qtgui.input</header>
+  </customwidget>
+  <customwidget>
+   <class>MAXLineEdit</class>
+   <extends>TaurusValueLineEdit</extends>
+   <header>maxwidgets.input</header>
   </customwidget>
  </customwidgets>
  <resources/>
