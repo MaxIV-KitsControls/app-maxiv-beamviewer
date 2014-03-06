@@ -198,16 +198,19 @@ class ProfilePlotWidget(TaurusWidget):
         layout.addWidget(graphics)
         self.setLayout(layout)
         self.plot = graphics.addPlot()
-        self.plotdata = pg.PlotDataItem()
+        self.plotdata = pg.PlotDataItem(fillLevel=0)
         self.plot.addItem(self.plotdata)
         self.y = y
         if self.y:
             self.centerline = pg.InfiniteLine(angle=0, movable=False)
+            self.plotdata.rotate(-90)
             self.plot.invertY()
             self.plot.showGrid(y=True)
+            self.plot.hideAxis("bottom")
         else:
             self.centerline = pg.InfiniteLine(angle=90, movable=False)
             self.plot.showGrid(x=True)
+            self.plot.hideAxis("left")
         self.plot.addItem(self.centerline)
         if title:
             self.plot.setTitle(title)
@@ -218,8 +221,7 @@ class ProfilePlotWidget(TaurusWidget):
     def set_data(self, roi, data, center):
         if self.y:
             ymin, ymax = roi[2], roi[2] + len(data)
-            y = np.arange(ymin, ymax)
-            self.data = (data, y)
+            self.data = (-np.arange(ymin, ymax), data)
             self.center = min(max(center, ymin), ymax)
         else:
             xmin, xmax = roi[0], roi[0] + len(data)
@@ -229,7 +231,7 @@ class ProfilePlotWidget(TaurusWidget):
 
     def _show_graph(self):
         if self.data and self.center:
-            self.plotdata.setData(x=self.data[0], y=self.data[1])
+            self.plotdata.setData(x=self.data[0], y=self.data[1], fillLevel=0, brush=(100,100,100,100))
             self.centerline.setPos(self.center)
 
     def handleEvent(self, evt_src, evt_type, evt_value):
@@ -237,17 +239,9 @@ class ProfilePlotWidget(TaurusWidget):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT, PyTango.EventType.CHANGE_EVENT):
             data = evt_value.value
             axis = self.bpm.ROI
-            if self.y:
-                ymin, ymax = axis[2], axis[2] + len(data)
-                print ymin, ymax
-                y = np.arange(ymax, ymin, -1)
-                self.plotdata.setData(x=data, y=y)
-                self.centerline.setPos(min(max(self.bpm.BeamCenterY, ymin), ymax))
-            else:
-                xmin, xmax = axis[0], axis[0] + len(data)
-                print ymin, ymax
-                self.plotdata.setData(x=np.arange(xmin, xmax), y=data)
-                self.centerline.setPos(min(max(self.bpm.BeamCenterX, xmin), xmax))
+            xmin, xmax = axis[0], axis[0] + len(data)
+            self.plotdata.setData(x=np.arange(xmin, xmax), y=data)
+            self.centerline.setPos(min(max(self.bpm.BeamCenterX, xmin), xmax))
 
 class LimaCameraWidget(TaurusWidget):
 
@@ -272,11 +266,10 @@ class LimaCameraWidget(TaurusWidget):
                 yag = self.limaccd.getPluginDeviceNameFromType("yag")
                 TaurusWidget.setModel(self, yag)
             except AttributeError:
-                print "Trying,,,"
-                time.sleep(1)
+                print "Trying to connect to %s..." % model
+                time.sleep(5)
             break
 
-        print "got connection"
         self.yag = self.getModelObj()
         self.yag.addListener(self.handle_shutdown)
         self.yag.Start()
