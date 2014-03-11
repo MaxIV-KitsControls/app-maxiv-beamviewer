@@ -345,6 +345,7 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_rotation(self, n):
         """Change image_rotation"""
+        # TODO: might want to also rotate the ROI
         rotation = self.allowed_rotations[n]
         self.stop_acq()
         self.bviewer.getAttribute("Rotation").write(rotation)
@@ -368,8 +369,9 @@ class LimaCameraWidget(TaurusWidget):
         roi_pos = self.imagewidget.roi.pos()
         roi_size = self.imagewidget.roi.size()
         # Update the image widget's ROI to match the new scaling
-        self.imagewidget.roi.scale(scale, center=(-roi_pos.x() / roi_size.x(),
-                                                  -roi_pos.y() / roi_size.y()))
+        if roi_size.x() != 0 and roi_size.y() != 0:
+            self.imagewidget.roi.scale(scale, center=(-roi_pos.x() / roi_size.x(),
+                                                      -roi_pos.y() / roi_size.y()))
         self.start_acq()
 
     def handle_bpm_show_position(self, value):
