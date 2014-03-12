@@ -171,6 +171,9 @@ class LimaImageWidget(TaurusWidget):
 
     def _update_roi(self):
         roi = self._roidata
+        print "roi", roi
+        if roi[1] == roi[3] == -1:
+            roi = 0, self.imageitem.width(), 0, self.imageitem.height()
         self.roi.setPos((roi[0], roi[2]), finish=False)
         self.roi.setSize((roi[1]-roi[0], roi[3]-roi[2]), finish=False)
 
@@ -285,9 +288,10 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.acq_status_label.setModel("%s/AcqStatus" % bviewer)
         self.ui.acquire_checkbox.setChecked(self.bviewer.AcqStatus == "Running")
         self.ui.acquire_checkbox.stateChanged.connect(self.handle_acquire_images)
-        self.allowed_trigger_modes = self.limaccd.getAttrStringValueList("acq_trigger_mode")
+        #self.allowed_trigger_modes = self.limaccd.getAttrStringValueList("acq_trigger_mode")
+        self.allowed_trigger_modes = ["INTERNAL_TRIGGER", "EXTERNAL_TRIGGER"]
         self.ui.trigger_mode_combobox.addValueNames(zip(self.allowed_trigger_modes, self.allowed_trigger_modes))
-        self.ui.trigger_mode_combobox.setCurrentIndex(self.bviewer.TriggerMode)
+        self.ui.trigger_mode_combobox.setCurrentIndex(0 if self.bviewer.TriggerMode == 0 else 1)
         self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
         print self.limaccd.camera_type, type(self.limaccd.camera_type)
         if self.limaccd.camera_type == "Simulator":
@@ -345,7 +349,7 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_rotation(self, n):
         """Change image_rotation"""
-        # TODO: might want to also rotate the ROI
+        # TODO: might want to also rotate the ROI to follow the image
         rotation = self.allowed_rotations[n]
         self.stop_acq()
         self.bviewer.getAttribute("Rotation").write(rotation)
@@ -353,10 +357,9 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_trigger_mode(self, n):
         """Change image_trigger_mode"""
-        # TODO: it is currently possible to select non-allowed trigger modes,
-        # although the device server will not write these values.
+        mode = 0 if n == 0 else 2  # Internal = 0, External = 2
         self.stop_acq()
-        self.bviewer.getAttribute("TriggerMode").write(n)
+        self.bviewer.getAttribute("TriggerMode").write(mode)
         self.start_acq()
 
     def handle_image_bin(self, binning):

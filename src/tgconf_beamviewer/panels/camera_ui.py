@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'camera.ui'
 #
-# Created: Thu Mar  6 10:10:53 2014
+# Created: Wed Mar 12 17:16:19 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -207,7 +207,7 @@ class Ui_Form(object):
         self.verticalLayout_2.addWidget(self.splitter)
 
         self.retranslateUi(Form)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
