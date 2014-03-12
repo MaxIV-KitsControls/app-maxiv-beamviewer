@@ -5,6 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.opengl import GLImageItem
 import PyTango
+from PIL import Image
 from taurus.core.util import CodecFactory
 from taurus.qt.qtgui.panel import TaurusWidget
 from taurus.qt import QtGui, QtCore
@@ -14,6 +15,26 @@ from camera_ui import Ui_Form
 
 pg.setConfigOption('background', (50,50,50))
 pg.setConfigOption('foreground', 'w')
+
+# wrapper around PIL 1.1.6 Image.save to preserve PNG metadata
+# public domain, Nick Galbreath
+# http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
+def pngsave(im, filename):
+    # these can be automatically added to Image.info dict
+    # they are not user-added metadata
+    reserved = ('interlace', 'gamma', 'dpi', 'transparency', 'aspect')
+
+    # undocumented class
+    from PIL import PngImagePlugin
+    meta = PngImagePlugin.PngInfo()
+
+    # copy metadata into new object
+    for k,v in im.info.iteritems():
+        if k in reserved: continue
+        meta.add_text(k, v, 0)
+
+    # and save
+    im.save(filename, "PNG", pnginfo=meta)
 
 
 def gaussian(x, mu, sig):
@@ -310,6 +331,7 @@ class LimaCameraWidget(TaurusWidget):
             zip(self.allowed_rotations, self.allowed_rotations))
         self.ui.image_rotation_combobox.setCurrentIndex(self.allowed_rotations.index(self.bviewer.Rotation))
         self.ui.image_rotation_combobox.currentIndexChanged.connect(self.handle_rotation)
+        self.ui.image_save_button.clicked.connect(self.handle_save)
 
         # BPM settings
         self.imagewidget.roi.sigRegionChangeFinished.connect(self.set_bpm_roi)
@@ -376,6 +398,13 @@ class LimaCameraWidget(TaurusWidget):
             self.imagewidget.roi.scale(scale, center=(-roi_pos.x() / roi_size.x(),
                                                       -roi_pos.y() / roi_size.y()))
         self.start_acq()
+
+    def handle_save(self):
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Open Image", "/tmp",
+                                                     "Image Files (*.png)");
+        im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
+        im.info["camera_acq_expo_time"] = "73.5s"
+        pngsave(im, str(filename))
 
     def handle_bpm_show_position(self, value):
         self.imagewidget.show_crosshair(value)
