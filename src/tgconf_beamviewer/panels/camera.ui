@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Camera</class>
+ <widget class="QWidget" name="Camera">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>682</width>
-    <height>547</height>
+    <height>556</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Camera</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -24,7 +24,7 @@
      </widget>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">

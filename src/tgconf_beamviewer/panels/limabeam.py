@@ -5,15 +5,36 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.opengl import GLImageItem
 import PyTango
+from PIL import Image
 from taurus.core.util import CodecFactory
 from taurus.qt.qtgui.panel import TaurusWidget
 from taurus.qt import QtGui, QtCore
 from taurus import Attribute, Device
 
-from camera_ui import Ui_Form
+from camera_ui import Ui_Camera
 
 pg.setConfigOption('background', (50,50,50))
 pg.setConfigOption('foreground', 'w')
+
+# wrapper around PIL 1.1.6 Image.save to preserve PNG metadata
+# public domain, Nick Galbreath
+# http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
+def pngsave(im, filename):
+    # these can be automatically added to Image.info dict
+    # they are not user-added metadata
+    reserved = ('interlace', 'gamma', 'dpi', 'transparency', 'aspect')
+
+    # undocumented class
+    from PIL import PngImagePlugin
+    meta = PngImagePlugin.PngInfo()
+
+    # copy metadata into new object
+    for k,v in im.info.iteritems():
+        if k in reserved: continue
+        meta.add_text(k, v, 0)
+
+    # and save
+    im.save(filename, "PNG", pnginfo=meta)
 
 
 def gaussian(x, mu, sig):
@@ -171,6 +192,9 @@ class LimaImageWidget(TaurusWidget):
 
     def _update_roi(self):
         roi = self._roidata
+        print "roi", roi
+        if roi[1] == roi[3] == -1:
+            roi = 0, self.imageitem.width(), 0, self.imageitem.height()
         self.roi.setPos((roi[0], roi[2]), finish=False)
         self.roi.setSize((roi[1]-roi[0], roi[3]-roi[2]), finish=False)
 
@@ -253,24 +277,34 @@ class LimaCameraWidget(TaurusWidget):
     def __init__(self, parent=None):
         TaurusWidget.__init__(self, parent)
 
-        self.ui = Ui_Form()
+        self.ui = Ui_Camera()
         self.ui.setupUi(self)
         self.imagewidget = LimaImageWidget()
         self.ui.cameraImageContainer.addWidget(self.imagewidget)
         self.json_codec = CodecFactory().getCodec('JSON')
 
         self.trigger.connect(self.update_bpm_values)
+        self.bpm_roi = None
+        self.bpm_result = None
+
+        self.ui.acquire_checkbox.stateChanged.connect(self.handle_acquire_images)
+        self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
+        self.ui.image_bin_spinbox.valueChanged.connect(self.handle_image_bin)
+        #self.ui.image_save_button.clicked.connect(self.handle_save)
+        self.ui.image_rotation_combobox.currentIndexChanged.connect(self.handle_rotation)
+        self.imagewidget.roi.sigRegionChangeFinished.connect(self.set_bpm_roi)
+        self.ui.bpm_show_position_checkbox.stateChanged.connect(self.handle_bpm_show_position)
+
+        self.xprof = ProfilePlotWidget("Profile X")
+        self.ui.bpm_profile_x_layout.addWidget(self.xprof)
+        self.yprof = ProfilePlotWidget("Profile Y", y=True)
+        self.ui.bpm_profile_y_layout.addWidget(self.yprof)
 
     def setModel(self, model):
-        while True:
-            try:
-                self.limaccd = Device(model)
-                bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
-                TaurusWidget.setModel(self, bviewer)
-            except AttributeError:
-                print "Trying to connect to %s..." % model
-                time.sleep(5)
-            break
+
+        self.limaccd = Device(str(model))
+        bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
+        TaurusWidget.setModel(self, bviewer)
 
         self.bviewer = self.getModelObj()
         self.bviewer.Start()
@@ -284,11 +318,11 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.gain_label.setModel("%s/Gain" % bviewer)
         self.ui.acq_status_label.setModel("%s/AcqStatus" % bviewer)
         self.ui.acquire_checkbox.setChecked(self.bviewer.AcqStatus == "Running")
-        self.ui.acquire_checkbox.stateChanged.connect(self.handle_acquire_images)
-        self.allowed_trigger_modes = self.limaccd.getAttrStringValueList("acq_trigger_mode")
-        self.ui.trigger_mode_combobox.addValueNames(zip(self.allowed_trigger_modes, self.allowed_trigger_modes))
-        self.ui.trigger_mode_combobox.setCurrentIndex(self.bviewer.TriggerMode)
-        self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
+
+        #self.allowed_trigger_modes = self.limaccd.getAttrStringValueList("acq_trigger_mode")
+        self.allowed_trigger_modes = ["INTERNAL_TRIGGER", "EXTERNAL_TRIGGER"]
+        self.ui.trigger_mode_combobox.setValueNames(zip(self.allowed_trigger_modes, self.allowed_trigger_modes))
+        self.ui.trigger_mode_combobox.setCurrentIndex(0 if self.bviewer.TriggerMode == 0 else 1)
         print self.limaccd.camera_type, type(self.limaccd.camera_type)
         if self.limaccd.camera_type == "Simulator":
             # This is a tamporary fix: If we're using a simulator, set the depth to
@@ -300,29 +334,24 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.image_width_label.setModel("%s/Width" % bviewer)
         self.ui.image_height_label.setModel("%s/Height" % bviewer)
         self.ui.image_bin_spinbox.setValue(self.bviewer.Binning)
-        self.ui.image_bin_spinbox.valueChanged.connect(self.handle_image_bin)
+
         self.allowed_rotations = sorted(self.limaccd.getAttrStringValueList("image_rotation"))
-        self.ui.image_rotation_combobox.addValueNames(
+        self.ui.image_rotation_combobox.setValueNames(
             zip(self.allowed_rotations, self.allowed_rotations))
         self.ui.image_rotation_combobox.setCurrentIndex(self.allowed_rotations.index(self.bviewer.Rotation))
-        self.ui.image_rotation_combobox.currentIndexChanged.connect(self.handle_rotation)
+
 
         # BPM settings
-        self.imagewidget.roi.sigRegionChangeFinished.connect(self.set_bpm_roi)
         self.imagewidget.show_roi(True)
+        if self.bpm_roi:
+            self.bpm_roi.removeListener(self.imagewidget.handle_roi_update)
         self.bpm_roi = self.bviewer.getAttribute("ROI")
         self.bpm_roi.addListener(self.imagewidget.handle_roi_update)
         self.ui.auto_roi_checkbox.setModel("%s/AutoROI" % bviewer)
-        self.ui.bpm_show_position_checkbox.stateChanged.connect(self.handle_bpm_show_position)
-
-        # BPM Beam profiles
-        self.xprof = ProfilePlotWidget("Profile X")
-        self.ui.bpm_profile_x_layout.addWidget(self.xprof)
-
-        self.yprof = ProfilePlotWidget("Profile Y", y=True)
-        self.ui.bpm_profile_y_layout.addWidget(self.yprof)
 
         # BPM result event listener
+        if self.bpm_result:
+           self.bpm_result.removeListener(self.handle_bpm_result)
         self.bpm_result = self.bviewer.getAttribute("BPMResult")
         self.bpm_result.addListener(self.handle_bpm_result)
 
@@ -345,7 +374,7 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_rotation(self, n):
         """Change image_rotation"""
-        # TODO: might want to also rotate the ROI
+        # TODO: might want to also rotate the ROI to follow the image
         rotation = self.allowed_rotations[n]
         self.stop_acq()
         self.bviewer.getAttribute("Rotation").write(rotation)
@@ -353,10 +382,9 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_trigger_mode(self, n):
         """Change image_trigger_mode"""
-        # TODO: it is currently possible to select non-allowed trigger modes,
-        # although the device server will not write these values.
+        mode = 0 if n == 0 else 2  # Internal = 0, External = 2
         self.stop_acq()
-        self.bviewer.getAttribute("TriggerMode").write(n)
+        self.bviewer.getAttribute("TriggerMode").write(mode)
         self.start_acq()
 
     def handle_image_bin(self, binning):
@@ -374,6 +402,13 @@ class LimaCameraWidget(TaurusWidget):
                                                       -roi_pos.y() / roi_size.y()))
         self.start_acq()
 
+    def handle_save(self):
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Open Image", "/tmp",
+                                                     "Image Files (*.png)");
+        im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
+        im.info["camera_acq_expo_time"] = "73.5s"
+        pngsave(im, str(filename))
+
     def handle_bpm_show_position(self, value):
         self.imagewidget.show_crosshair(value)
 
@@ -381,36 +416,37 @@ class LimaCameraWidget(TaurusWidget):
         """Handle result from the Lima BPM calculations"""
         if (evt_type in (PyTango.EventType.PERIODIC_EVENT, PyTango.EventType.CHANGE_EVENT)
             and evt_value):
-                self.bpm_result = self.json_codec.decode(evt_value.value)[1]
+                self._bpm_result = self.json_codec.decode(evt_value.value)[1]
                 self.trigger.emit()
 
     def update_bpm_values(self):
         """Update GUI with BPM results"""
         fmt = "%.2f"
-        self.ui.beam_intensity_label.setText(fmt % self.bpm_result["beam_intensity"])
-        self.ui.beam_center_x_label.setText(fmt % self.bpm_result["beam_center_x"])
-        self.ui.beam_center_y_label.setText(fmt % self.bpm_result["beam_center_y"])
-        self.ui.beam_fwhm_x_label.setText(fmt % self.bpm_result["beam_fwhm_x"])
-        self.ui.beam_fwhm_y_label.setText(fmt % self.bpm_result["beam_fwhm_y"])
+        self.ui.beam_intensity_label.setText(fmt % self._bpm_result["beam_intensity"])
+        self.ui.beam_center_x_label.setText(fmt % self._bpm_result["beam_center_x"])
+        self.ui.beam_center_y_label.setText(fmt % self._bpm_result["beam_center_y"])
+        self.ui.beam_fwhm_x_label.setText(fmt % self._bpm_result["beam_fwhm_x"])
+        self.ui.beam_fwhm_y_label.setText(fmt % self._bpm_result["beam_fwhm_y"])
         self.xprof.set_data(self.imagewidget._roidata,
-                            decode_base64_array(self.bpm_result["profile_x"]),
-                            self.bpm_result["beam_center_x"])
+                            decode_base64_array(self._bpm_result["profile_x"]),
+                            self._bpm_result["beam_center_x"])
         self.yprof.set_data(self.imagewidget._roidata,
-                            decode_base64_array(self.bpm_result["profile_y"]),
-                            self.bpm_result["beam_center_y"])
-        self.imagewidget.set_crosshair((self.bpm_result["beam_center_x"], self.bpm_result["beam_center_y"]))
+                            decode_base64_array(self._bpm_result["profile_y"]),
+                            self._bpm_result["beam_center_y"])
+        self.imagewidget.set_crosshair((self._bpm_result["beam_center_x"], self._bpm_result["beam_center_y"]))
 
     def set_bpm_roi(self, roi):
         """Send the updated ROI to the BPM device."""
-        state = roi.getState()
-        pos = state["pos"]
-        size = state["size"]
-        x, y, w, h = (int(round(a)) for a in (max(0, pos.x()), max(0, pos.y()),
-                                              min(self.bviewer.Width - pos.x(), size.x()),
-                                              min(self.bviewer.Height - pos.y(), size.y())))
-        self.bpm_roi.write([x, x+w, y, y+h])
-        self._roidata = (x, x+h, y, y+w)
-        self.ui.roi_label.setText("x: %d, y: %d, w: %d, h: %d" % (x, y, w, h))
+        if self.bpm_roi:
+            state = roi.getState()
+            pos = state["pos"]
+            size = state["size"]
+            x, y, w, h = (int(round(a)) for a in (max(0, pos.x()), max(0, pos.y()),
+                                                  min(self.bviewer.Width - pos.x(), size.x()),
+                                                  min(self.bviewer.Height - pos.y(), size.y())))
+            self.bpm_roi.write([x, x+w, y, y+h])
+            self._roidata = (x, x+h, y, y+w)
+            self.ui.roi_label.setText("x: %d, y: %d, w: %d, h: %d" % (x, y, w, h))
 
 
 def main():
