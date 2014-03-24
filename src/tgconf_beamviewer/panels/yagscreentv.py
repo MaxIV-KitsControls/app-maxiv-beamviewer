@@ -14,6 +14,7 @@ State = PyTango.DevState
 
 from taurus.qt.qtgui.display.taurusled import _TaurusLedController
 
+
 class _YAGLedController(_TaurusLedController):
     LedMap = {State.INSERT   : (True,  "white", False),
               State.EXTRACT  : (True,  "green", False),
@@ -23,6 +24,7 @@ class _YAGLedController(_TaurusLedController):
     def usePreferedColor(self, widget):
         # never use prefered widget color. Use always the map
         return False
+
 
 class YAGLed(TaurusLed):
     def _calculate_controller_class(self):
@@ -123,7 +125,7 @@ class YAGScreenTV(TaurusValue):
         if device:
             try:
                 tool_tip.append(('status', device.Status()))
-            except PyTango.DevFailed:
+            except:
                 pass
 
         return self.toolTipObjToStr(tool_tip)
