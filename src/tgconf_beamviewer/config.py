@@ -78,18 +78,23 @@ INSTRUMENTS_FROM_POOL = False
 
 
 camera = PanelDescription(
-    'Camera',
+    "Camera",
     classname="LimaCameraWidget",
-    modulename='tgconf_yagviewer.panels',
-    model= 'lima/limaccd/1'
+    modulename='tgconf_beamviewer.panels',
+    sharedDataRead={"SelectedCamera": "setModel"}
 )
 
 yag = PanelDescription(
-    "YAG",
-    classname="TaurusForm",
-    model=["sys/yag/0/Active", "sys/yag/1/Active", "sys/yag/2/Active"]
+    "YAG Screens",
+    classname="YAGForm",
+    modulename="tgconf_beamviewer.panels",
 )
 
+camera_selector = PanelDescription('Camera Selector',
+    classname = "CameraSelector",
+    modulename="tgconf_beamviewer.panels",
+    sharedDataWrite={'SelectedCamera': 'currentIndexChanged(QString)'}
+)
 
 #===============================================================================
 # Define custom toolbars to be shown. To define a toolbar, instantiate a
