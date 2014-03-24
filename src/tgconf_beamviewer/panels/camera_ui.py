@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'camera.ui'
 #
-# Created: Thu Mar  6 10:10:53 2014
+# Created: Mon Mar 24 13:46:40 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,21 +23,32 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_Form(object):
-    def setupUi(self, Form):
-        Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(682, 547)
-        self.verticalLayout_2 = QtGui.QVBoxLayout(Form)
+class Ui_Camera(object):
+    def setupUi(self, Camera):
+        Camera.setObjectName(_fromUtf8("Camera"))
+        Camera.resize(648, 768)
+        self.verticalLayout_2 = QtGui.QVBoxLayout(Camera)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.splitter = QtGui.QSplitter(Form)
+        self.splitter = QtGui.QSplitter(Camera)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName(_fromUtf8("splitter"))
-        self.verticalLayoutWidget = QtGui.QWidget(self.splitter)
-        self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
-        self.cameraImageContainer = QtGui.QVBoxLayout(self.verticalLayoutWidget)
+        self.camera_image_widget = QtGui.QWidget(self.splitter)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.camera_image_widget.sizePolicy().hasHeightForWidth())
+        self.camera_image_widget.setSizePolicy(sizePolicy)
+        self.camera_image_widget.setMinimumSize(QtCore.QSize(9, 0))
+        self.camera_image_widget.setObjectName(_fromUtf8("camera_image_widget"))
+        self.cameraImageContainer = QtGui.QVBoxLayout(self.camera_image_widget)
         self.cameraImageContainer.setMargin(0)
         self.cameraImageContainer.setObjectName(_fromUtf8("cameraImageContainer"))
         self.tabWidget = QtGui.QTabWidget(self.splitter)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
+        self.tabWidget.setSizePolicy(sizePolicy)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.tab = QtGui.QWidget()
         self.tab.setObjectName(_fromUtf8("tab"))
@@ -117,6 +128,9 @@ class Ui_Form(object):
         self.image_bin_spinbox.setMinimum(1)
         self.image_bin_spinbox.setObjectName(_fromUtf8("image_bin_spinbox"))
         self.formLayout_2.setWidget(3, QtGui.QFormLayout.FieldRole, self.image_bin_spinbox)
+        self.image_save_button = QtGui.QPushButton(self.tab_2)
+        self.image_save_button.setObjectName(_fromUtf8("image_save_button"))
+        self.formLayout_2.setWidget(5, QtGui.QFormLayout.FieldRole, self.image_save_button)
         self.tabWidget.addTab(self.tab_2, _fromUtf8(""))
         self.tab_3 = QtGui.QWidget()
         self.tab_3.setObjectName(_fromUtf8("tab_3"))
@@ -206,36 +220,37 @@ class Ui_Form(object):
         self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
         self.verticalLayout_2.addWidget(self.splitter)
 
-        self.retranslateUi(Form)
-        self.tabWidget.setCurrentIndex(2)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.retranslateUi(Camera)
+        self.tabWidget.setCurrentIndex(1)
+        QtCore.QMetaObject.connectSlotsByName(Camera)
 
-    def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
-        self.label.setText(_translate("Form", "Exposure time (ms)", None))
-        self.acq_expo_time.setModel(_translate("Form", "acq_expo_time", None))
-        self.label_2.setText(_translate("Form", "Acquire images", None))
-        self.label_3.setText(_translate("Form", "Trigger mode", None))
-        self.label_4.setText(_translate("Form", "Camera type", None))
-        self.camera_type_label.setText(_translate("Form", "Unknown", None))
-        self.label_7.setText(_translate("Form", "Status", None))
-        self.label_16.setText(_translate("Form", "Gain", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "Acquisition", None))
-        self.label_5.setText(_translate("Form", "Image width", None))
-        self.label_6.setText(_translate("Form", "Image height", None))
-        self.label_9.setText(_translate("Form", "Rotation", None))
-        self.label_8.setText(_translate("Form", "Binning", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Form", "Image", None))
-        self.label_10.setText(_translate("Form", "ROI", None))
-        self.label_15.setText(_translate("Form", "Auto ROI", None))
-        self.label_18.setText(_translate("Form", "Show beam position", None))
-        self.groupBox.setTitle(_translate("Form", "Beam parameters", None))
-        self.label_12.setText(_translate("Form", "Center Y:", None))
-        self.label_17.setText(_translate("Form", "Intensity:", None))
-        self.label_11.setText(_translate("Form", "Center X:", None))
-        self.label_14.setText(_translate("Form", "FWHM Y:", None))
-        self.label_13.setText(_translate("Form", "FWHM X:", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Form", "BPM", None))
+    def retranslateUi(self, Camera):
+        Camera.setWindowTitle(_translate("Camera", "Camera", None))
+        self.label.setText(_translate("Camera", "Exposure time (ms)", None))
+        self.acq_expo_time.setModel(_translate("Camera", "acq_expo_time", None))
+        self.label_2.setText(_translate("Camera", "Acquire images", None))
+        self.label_3.setText(_translate("Camera", "Trigger mode", None))
+        self.label_4.setText(_translate("Camera", "Camera type", None))
+        self.camera_type_label.setText(_translate("Camera", "Unknown", None))
+        self.label_7.setText(_translate("Camera", "Status", None))
+        self.label_16.setText(_translate("Camera", "Gain", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Camera", "Acquisition", None))
+        self.label_5.setText(_translate("Camera", "Image width", None))
+        self.label_6.setText(_translate("Camera", "Image height", None))
+        self.label_9.setText(_translate("Camera", "Rotation", None))
+        self.label_8.setText(_translate("Camera", "Binning", None))
+        self.image_save_button.setText(_translate("Camera", "Save Image", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Camera", "Image", None))
+        self.label_10.setText(_translate("Camera", "ROI", None))
+        self.label_15.setText(_translate("Camera", "Auto ROI", None))
+        self.label_18.setText(_translate("Camera", "Show beam position", None))
+        self.groupBox.setTitle(_translate("Camera", "Beam parameters", None))
+        self.label_12.setText(_translate("Camera", "Center Y:", None))
+        self.label_17.setText(_translate("Camera", "Intensity:", None))
+        self.label_11.setText(_translate("Camera", "Center X:", None))
+        self.label_14.setText(_translate("Camera", "FWHM Y:", None))
+        self.label_13.setText(_translate("Camera", "FWHM X:", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Camera", "BPM", None))
 
 from taurus.qt.qtgui.display import TaurusLabel
 from taurus.qt.qtgui.input import TaurusValueComboBox, TaurusValueCheckBox
@@ -244,9 +259,9 @@ from maxwidgets.input import MAXLineEdit
 if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
-    Form = QtGui.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
+    Camera = QtGui.QWidget()
+    ui = Ui_Camera()
+    ui.setupUi(Camera)
+    Camera.show()
     sys.exit(app.exec_())
 

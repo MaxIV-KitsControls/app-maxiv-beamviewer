@@ -280,7 +280,7 @@ class LimaCameraWidget(TaurusWidget):
         self.ui = Ui_Camera()
         self.ui.setupUi(self)
         self.imagewidget = LimaImageWidget()
-        self.ui.cameraImageContainer.addWidget(self.imagewidget)
+        self.ui.camera_image_widget.layout().addWidget(self.imagewidget)
         self.json_codec = CodecFactory().getCodec('JSON')
 
         self.trigger.connect(self.update_bpm_values)
@@ -290,7 +290,7 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.acquire_checkbox.stateChanged.connect(self.handle_acquire_images)
         self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
         self.ui.image_bin_spinbox.valueChanged.connect(self.handle_image_bin)
-        #self.ui.image_save_button.clicked.connect(self.handle_save)
+        self.ui.image_save_button.clicked.connect(self.handle_save)
         self.ui.image_rotation_combobox.currentIndexChanged.connect(self.handle_rotation)
         self.imagewidget.roi.sigRegionChangeFinished.connect(self.set_bpm_roi)
         self.ui.bpm_show_position_checkbox.stateChanged.connect(self.handle_bpm_show_position)
