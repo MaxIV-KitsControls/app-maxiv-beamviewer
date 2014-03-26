@@ -76,6 +76,32 @@ INSTRUMENTS_FROM_POOL = False
 # for the gblgui_utils module)
 #===============================================================================
 
+yags = ['I.00/DIA/SCRN01', 
+	'I.00/DIA/SCRN02',
+	'I.01/DIA/SCRN01',
+	'I.04/DIA/SCRN01',
+	'I.07/DIA/SCRN01',
+	'I.12/DIA/SCRN01',
+	'I.15/DIA/SCRN01',
+	'I.BC1/DIA/SCRN01',
+	'I.BC1/DIA/SCRN02',
+	'I.BC1/DIA/SCRN03',
+	'I.BC2/DIA/SCRN01',
+	'I.BC2/DIA/SCRN02',
+	'I.BC2/DIA/SCRN03',
+	'I.EX1/DIA/SCRN01',
+	'I.EX3/DIA/SCRN01',
+	'I.MS1/DIA/SCRN01',
+	'I.MS2/DIA/SCRN01',
+	'I.MS2/DIA/SCRN02',
+	'I.MS3/DIA/SCNR01',
+	'I.SP02/DIA/SCRN01',
+	'I.SP02/DIA/SCRN02',
+	'I.SP02/DIA/SCRN03',
+	'I.SP02/DIA/SCRN04',
+	'I.TR1/DIA/SCRN01',
+	'I.TR3/DIA/SCRN01',
+	'I.TR3/DIA/SCRN02']
 
 camera = PanelDescription(
     "Camera",
@@ -88,6 +114,7 @@ yag = PanelDescription(
     "YAG Screens",
     classname="YAGForm",
     modulename="tgconf_beamviewer.panels",
+    model = yags
 )
 
 camera_selector = PanelDescription('Camera Selector',
