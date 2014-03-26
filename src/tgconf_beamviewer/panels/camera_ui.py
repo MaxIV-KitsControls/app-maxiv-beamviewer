@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'camera.ui'
 #
-# Created: Mon Mar 24 13:46:40 2014
+# Created: Wed Mar 26 10:55:52 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_Camera(object):
     def setupUi(self, Camera):
         Camera.setObjectName(_fromUtf8("Camera"))
-        Camera.resize(648, 768)
+        Camera.resize(545, 768)
         self.verticalLayout_2 = QtGui.QVBoxLayout(Camera)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.splitter = QtGui.QSplitter(Camera)
@@ -64,10 +64,6 @@ class Ui_Camera(object):
         self.acq_expo_time.setAutoApply(True)
         self.acq_expo_time.setObjectName(_fromUtf8("acq_expo_time"))
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.acq_expo_time)
-        self.acquire_checkbox = QtGui.QCheckBox(self.tab)
-        self.acquire_checkbox.setText(_fromUtf8(""))
-        self.acquire_checkbox.setObjectName(_fromUtf8("acquire_checkbox"))
-        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.acquire_checkbox)
         self.label_2 = QtGui.QLabel(self.tab)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_2)
@@ -96,6 +92,15 @@ class Ui_Camera(object):
         self.label_16 = QtGui.QLabel(self.tab)
         self.label_16.setObjectName(_fromUtf8("label_16"))
         self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.label_16)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.start_acquisition_button = QtGui.QPushButton(self.tab)
+        self.start_acquisition_button.setObjectName(_fromUtf8("start_acquisition_button"))
+        self.horizontalLayout.addWidget(self.start_acquisition_button)
+        self.stop_acquisition_button = QtGui.QPushButton(self.tab)
+        self.stop_acquisition_button.setObjectName(_fromUtf8("stop_acquisition_button"))
+        self.horizontalLayout.addWidget(self.stop_acquisition_button)
+        self.formLayout.setLayout(2, QtGui.QFormLayout.FieldRole, self.horizontalLayout)
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName(_fromUtf8("tab_2"))
@@ -221,19 +226,21 @@ class Ui_Camera(object):
         self.verticalLayout_2.addWidget(self.splitter)
 
         self.retranslateUi(Camera)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Camera)
 
     def retranslateUi(self, Camera):
         Camera.setWindowTitle(_translate("Camera", "Camera", None))
         self.label.setText(_translate("Camera", "Exposure time (ms)", None))
         self.acq_expo_time.setModel(_translate("Camera", "acq_expo_time", None))
-        self.label_2.setText(_translate("Camera", "Acquire images", None))
+        self.label_2.setText(_translate("Camera", "Acquisition", None))
         self.label_3.setText(_translate("Camera", "Trigger mode", None))
         self.label_4.setText(_translate("Camera", "Camera type", None))
         self.camera_type_label.setText(_translate("Camera", "Unknown", None))
         self.label_7.setText(_translate("Camera", "Status", None))
         self.label_16.setText(_translate("Camera", "Gain", None))
+        self.start_acquisition_button.setText(_translate("Camera", "Start", None))
+        self.stop_acquisition_button.setText(_translate("Camera", "Stop", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Camera", "Acquisition", None))
         self.label_5.setText(_translate("Camera", "Image width", None))
         self.label_6.setText(_translate("Camera", "Image height", None))
