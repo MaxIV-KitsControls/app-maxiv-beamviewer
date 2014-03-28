@@ -117,6 +117,12 @@ yag = PanelDescription(
     model = yags
 )
 
+motors = PanelDescription(
+    "Motors",
+    classname="TaurusForm",
+    model = ['I-GR00-VAC-SCRP-03', 'I-G00-DIA-SCRNM-02']
+)
+
 camera_selector = PanelDescription('Camera Selector',
     classname = "CameraSelector",
     modulename="tgconf_beamviewer.panels",
