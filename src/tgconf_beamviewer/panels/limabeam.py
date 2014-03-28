@@ -351,12 +351,16 @@ class LimaCameraWidget(TaurusWidget):
         # Image settings
         self.ui.image_width_label.setModel("%s/Width" % bviewer)
         self.ui.image_height_label.setModel("%s/Height" % bviewer)
+        self.ui.image_bin_spinbox.blockSignals(True)
         self.ui.image_bin_spinbox.setValue(self.bviewer.Binning)
+        self.ui.image_bin_spinbox.blockSignals(False)
 
         self.allowed_rotations = sorted(self.limaccd.getAttrStringValueList("image_rotation"))
+        self.ui.image_rotation_combobox.blockSignals(True)
         self.ui.image_rotation_combobox.setValueNames(
             zip(self.allowed_rotations, self.allowed_rotations))
         self.ui.image_rotation_combobox.setCurrentIndex(self.allowed_rotations.index(self.bviewer.Rotation))
+        self.ui.image_rotation_combobox.blockSignals(False)
 
         # BPM settings
         self.imagewidget.show_roi(True)
@@ -376,6 +380,7 @@ class LimaCameraWidget(TaurusWidget):
     def start_acq(self):
         """Tell camera to start acquiring images"""
         try:
+            self.bviewer.Start()
             self.bviewer.StartAcquisition()
         except PyTango.DevFailed as e:
             print "Trouble starting: %s" % e
@@ -383,6 +388,7 @@ class LimaCameraWidget(TaurusWidget):
     def stop_acq(self):
         """Tell camera to stop acquiring images"""
         self.bviewer.StopAcquisition()
+        self.bviewer.Stop()
 
     def handle_rotation(self, n):
         """Change image_rotation"""
