@@ -1,6 +1,0 @@
-#!/usr/bin/python
-
-from tgconf_yagviewer.panels import limabeam
-
-
-limabeam.main()

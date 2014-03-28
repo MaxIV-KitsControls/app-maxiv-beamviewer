@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Camera</class>
+ <widget class="QWidget" name="Camera">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>682</width>
-    <height>547</height>
+    <width>545</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Camera</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -19,12 +19,30 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="verticalLayoutWidget">
+     <widget class="QWidget" name="camera_image_widget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>9</width>
+        <height>0</height>
+       </size>
+      </property>
       <layout class="QVBoxLayout" name="cameraImageContainer"/>
      </widget>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -34,44 +52,6 @@
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Camera type</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="camera_type_label">
-          <property name="text">
-           <string>Unknown</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="TaurusLabel" name="acq_status_label"/>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Acquire images</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="acquire_checkbox">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
@@ -95,20 +75,31 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_16">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Gain</string>
+           <string>Acquisition</string>
           </property>
          </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="MAXLineEdit" name="gain_label"/>
         </item>
         <item row="5" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
            <string>Trigger mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Camera type</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="camera_type_label">
+          <property name="text">
+           <string>Unknown</string>
           </property>
          </widget>
         </item>
@@ -118,6 +109,44 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="TaurusLabel" name="acq_status_label"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Status</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="MAXLineEdit" name="gain_label"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Gain</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="start_acquisition_button">
+            <property name="text">
+             <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="stop_acquisition_button">
+            <property name="text">
+             <string>Stop</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -180,7 +209,7 @@
         <item row="5" column="1">
          <widget class="QPushButton" name="image_save_button">
           <property name="text">
-           <string>Save image</string>
+           <string>Save Image</string>
           </property>
          </widget>
         </item>
