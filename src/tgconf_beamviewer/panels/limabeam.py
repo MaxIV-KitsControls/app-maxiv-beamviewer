@@ -1,7 +1,13 @@
 import base64
 from contextlib import contextmanager
+import datetime
+import json
 from math import isnan
-import time
+import os
+try:
+    from collections import OrderedDict  # in python 2.7 and up
+except ImportError:
+    from ordereddict import OrderedDict  # needs to be installed for < 2.7
 
 import numpy as np
 import pyqtgraph as pg
@@ -16,48 +22,6 @@ from camera_ui import Ui_Camera
 
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
-
-# wrapper around PIL 1.1.6 Image.save to preserve PNG metadata
-# public domain, Nick Galbreath
-# http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
-def pngsave(im, filename):
-    # these can be automatically added to Image.info dict
-    # they are not user-added metadata
-    reserved = ('interlace', 'gamma', 'dpi', 'transparency', 'aspect')
-
-    # undocumented class
-    from PIL import PngImagePlugin
-    meta = PngImagePlugin.PngInfo()
-
-    # copy metadata into new object
-    for k,v in im.info.iteritems():
-        if k in reserved: continue
-        meta.add_text(k, v, 0)
-
-    # and save
-    im.save(filename, "PNG", pnginfo=meta)
-
-
-# wrapper around PIL 1.1.6 Image.save to preserve PNG metadata
-# public domain, Nick Galbreath
-# http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
-def pngsave(im, filename):
-    # these can be automatically added to Image.info dict
-    # they are not user-added metadata
-    reserved = ('interlace', 'gamma', 'dpi', 'transparency', 'aspect')
-
-    # undocumented class
-    from PIL import PngImagePlugin
-    meta = PngImagePlugin.PngInfo()
-
-    # copy metadata into new object
-    for k, v in im.info.iteritems():
-        if k in reserved:
-            continue
-        meta.add_text(k, v, 0)
-
-    # and save
-    im.save(filename, "PNG", pnginfo=meta)
 
 
 def gaussian(x, mu, sig):
@@ -317,6 +281,7 @@ class LimaCameraWidget(TaurusWidget):
         self.imagewidget = LimaImageWidget()
         self.ui.camera_image_widget.layout().addWidget(self.imagewidget)
         self.json_codec = CodecFactory().getCodec('JSON')
+        self._save_path = ""
 
         self.trigger.connect(self.update_bpm_values)
         self.bpm_roi = None
@@ -340,6 +305,7 @@ class LimaCameraWidget(TaurusWidget):
 
     def setModel(self, model):
 
+        self._devicename = model
         self.limaccd = Device(str(model))
         bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
         TaurusWidget.setModel(self, bviewer)
@@ -397,6 +363,33 @@ class LimaCameraWidget(TaurusWidget):
         self.bpm_result = self.bviewer.getAttribute("BPMResult")
         self.bpm_result.addListener(self.handle_bpm_result)
 
+    def get_metadata(self):
+        "Collect various data about the latest image"
+
+        metadata = OrderedDict()
+        timestamp = self._bpm_result.get("timestamp")
+        if timestamp:
+            metadata["date"] = datetime.datetime.fromtimestamp(timestamp)\
+                                                .strftime('%Y-%m-%d %H:%M:%S')
+        metadata["camera_device"] = self._devicename
+        metadata["camera_type"] = self.limaccd.camera_type
+
+        metadata["width"] = {"value": self.bviewer.Width, "unit": "pixels"}
+        metadata["height"] = {"value": self.bviewer.Height, "unit": "pixels"}
+        metadata["acquisition_time"] = {"value": self.bviewer.Exposure,
+                                        "unit": "ms"}
+        try:
+            rotation = int(self.bviewer.Rotation)
+        except ValueError:
+            rotation = 0
+        metadata["rotation"] = {"value": rotation, "unit": "degrees"}
+        metadata["gain"] = {"value": self.bviewer.Gain}
+        metadata["binning"] = {"value": self.bviewer.Binning}
+        metadata["trigger_mode"] = {"value": self.bviewer.TriggerMode}
+        metadata["bpm_result"] = self._bpm_result
+
+        return metadata
+
     def start_acq(self):
         """Tell camera to start acquiring images"""
         try:
@@ -438,18 +431,29 @@ class LimaCameraWidget(TaurusWidget):
                                                           -roi_pos.y() / roi_size.y()))
 
     def handle_save(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Open Image", "/tmp",
-                                                     "Image Files (*.png)");
-        im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
-        im.info["camera_acq_expo_time"] = "73.5s"
-        pngsave(im, str(filename))
 
-    def handle_save(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Open Image", "/tmp",
-                                                     "Image Files (*.png)");
+        "Save the current image to disk, along with its metadata"
+
+        metadata = self.get_metadata()
         im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
-        im.info["camera_acq_expo_time"] = "73.5s"
-        pngsave(im, str(filename))
+
+        camera = metadata["camera_device"].split("/")[-1]
+        date = metadata["date"].replace(" ", "_")
+        default = os.path.join(self._save_path,
+                               "image_%s_%s.png" % (camera, date))
+
+        filename = str(QtGui.QFileDialog.getSaveFileName(
+            self, "Save Image", default, "Image files (*.png)"))
+        if not filename.lower().endswith(".png"):
+            filename += ".png"
+
+        im.save(str(filename), "PNG")
+        self._save_path, name = os.path.split(filename)
+        metadata["image_filename"] = name
+
+        metadata_filename = os.path.splitext(filename)[0] + ".json"
+        with open(metadata_filename, "w") as f:
+            json.dump(metadata, f, indent=4)
 
     def handle_bpm_show_position(self, value):
         self.imagewidget.show_crosshair(value)
