@@ -278,6 +278,7 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui = Ui_Camera()
         self.ui.setupUi(self)
+        self.ui.splitter.setSizes([10000, 1])  # set the splitter weights
         self.imagewidget = LimaImageWidget()
         self.ui.camera_image_widget.layout().addWidget(self.imagewidget)
         self.json_codec = CodecFactory().getCodec('JSON')
