@@ -1,2 +1,3 @@
 include src/tgconf_beamviewer/images/*
 include src/tgconf_beamviewer/default.ini
+include maxiv-beamviewer.desktop

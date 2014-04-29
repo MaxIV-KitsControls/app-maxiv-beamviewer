@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=MAX IV Beam Viewer
+Exec=ctbeamviewer
+Type=Application
+Categories=MAXIV;Science;
+Comment=Viewer for YAG screen cameras
+Terminal=false
