@@ -4,6 +4,7 @@ import datetime
 import json
 from math import isnan
 import os
+import time
 try:
     from collections import OrderedDict  # in python 2.7 and up
 except ImportError:
@@ -284,6 +285,8 @@ class LimaCameraWidget(TaurusWidget):
         self.json_codec = CodecFactory().getCodec('JSON')
         self._save_path = ""
 
+        self.bviewer = None
+
         self.trigger.connect(self.update_bpm_values)
         self.bpm_roi = None
         self.bpm_result = None
@@ -291,20 +294,27 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui.start_acquisition_button.clicked.connect(self.start_acq)
         self.ui.stop_acquisition_button.clicked.connect(self.stop_acq)
-        self.ui.trigger_mode_combobox.currentIndexChanged.connect(self.handle_trigger_mode)
+        self.ui.trigger_mode_combobox.currentIndexChanged.connect(
+            self.handle_trigger_mode)
 
         self.ui.image_bin_spinbox.valueChanged.connect(self.handle_image_bin)
         self.ui.image_save_button.clicked.connect(self.handle_save)
-        self.ui.image_rotation_combobox.currentIndexChanged.connect(self.handle_rotation)
+        self.ui.image_rotation_combobox.currentIndexChanged.connect(
+            self.handle_rotation)
 
         self.imagewidget.roi.sigRegionChangeFinished.connect(self.set_bpm_roi)
-        self.ui.bpm_show_position_checkbox.stateChanged.connect(self.handle_bpm_show_position)
+        self.ui.bpm_show_position_checkbox.stateChanged.connect(
+            self.handle_bpm_show_position)
         self.xprof = ProfilePlotWidget("Profile X")
         self.ui.bpm_profile_x_layout.addWidget(self.xprof)
         self.yprof = ProfilePlotWidget("Profile Y", y=True)
         self.ui.bpm_profile_y_layout.addWidget(self.yprof)
 
     def setModel(self, model):
+
+        # If we're switching cameras, we first stop the previous one
+        if self.bviewer:
+            self.stop_acq()
 
         self._devicename = model
         self.limaccd = Device(str(model))
@@ -352,14 +362,20 @@ class LimaCameraWidget(TaurusWidget):
         # BPM settings
         self.imagewidget.show_roi(True)
         if self.bpm_roi:
+            # disconnect any previous listener
             self.bpm_roi.removeListener(self.imagewidget.handle_roi_update)
-        else:
-            self.bpm_roi = self.bviewer.getAttribute("ROI")
+        self.bpm_roi = self.bviewer.getAttribute("ROI")
         self.bpm_roi.addListener(self.imagewidget.handle_roi_update)
+
+        # TODO: Need to update the ROI when changing camera somehow
+        # self.imagewidget._roidata = self.bpm_roi.read()
+        # self.imagewidget._update_roi()
+
         self.ui.auto_roi_checkbox.setModel("%s/AutoROI" % bviewer)
 
         # BPM result event listener
         if self.bpm_result:
+            # disconnect any previous listener
             self.bpm_result.removeListener(self.handle_bpm_result)
         self.bpm_result = self.bviewer.getAttribute("BPMResult")
         self.bpm_result.addListener(self.handle_bpm_result)
@@ -369,9 +385,10 @@ class LimaCameraWidget(TaurusWidget):
 
         metadata = OrderedDict()
         timestamp = self._bpm_result.get("timestamp")
-        if timestamp:
-            metadata["date"] = datetime.datetime.fromtimestamp(timestamp)\
-                                                .strftime('%Y-%m-%d %H:%M:%S')
+        if timestamp is None:
+            timestamp = time.time()
+        metadata["date"] = datetime.datetime.fromtimestamp(timestamp)\
+                                            .strftime('%Y-%m-%d %H:%M:%S')
         metadata["camera_device"] = self._devicename
         metadata["camera_type"] = self.limaccd.camera_type
 
@@ -427,9 +444,10 @@ class LimaCameraWidget(TaurusWidget):
             roi_pos = self.imagewidget.roi.pos()
             roi_size = self.imagewidget.roi.size()
             # Update the image widget's ROI to match the new scaling
-            if roi_size.x() != 0 and roi_size.y() != 0:
-                self.imagewidget.roi.scale(scale, center=(-roi_pos.x() / roi_size.x(),
-                                                          -roi_pos.y() / roi_size.y()))
+        if roi_size.x() != 0 and roi_size.y() != 0:
+            self.imagewidget.roi.scale(
+                scale, center=(-roi_pos.x() / roi_size.x(),
+                               -roi_pos.y() / roi_size.y()))
 
     def handle_save(self):
 
@@ -439,7 +457,10 @@ class LimaCameraWidget(TaurusWidget):
         im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
 
         camera = metadata["camera_device"].split("/")[-1]
-        date = metadata["date"].replace(" ", "_")
+        if "date" in metadata:
+            date = metadata["date"].replace(" ", "_")
+        else:
+            date = "unknown"
         default = os.path.join(self._save_path,
                                "image_%s_%s.png" % (camera, date))
 
@@ -461,8 +482,8 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_bpm_result(self, evt_src, evt_type, evt_value):
         """Handle result from the Lima BPM calculations"""
-        if (evt_type in (PyTango.EventType.PERIODIC_EVENT, PyTango.EventType.CHANGE_EVENT)
-            and evt_value):
+        if (evt_type in (PyTango.EventType.PERIODIC_EVENT,
+                         PyTango.EventType.CHANGE_EVENT) and evt_value):
                 self._bpm_result = self.json_codec.decode(evt_value.value)[1]
                 self.trigger.emit()
 
