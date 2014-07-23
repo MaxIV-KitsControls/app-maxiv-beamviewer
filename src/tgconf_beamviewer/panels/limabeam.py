@@ -453,9 +453,18 @@ class LimaCameraWidget(TaurusWidget):
 
         "Save the current image to disk, along with its metadata"
 
-        metadata = self.get_metadata()
-        im = Image.fromarray((self.imagewidget.image * 2**4).astype(np.int32))  # 12 bits
+        # Because the image is 12 bit (assuming we're dealing with a Basler camera, there
+        # is some logic needed here for the general case) we multiply it by 2^4 in order
+        # to get the dynamic range right. This should not be necessary in principle but it
+        # should make the images easier to view with arbitrary programs.
+        scale_factor = 2*4
+        scaled_image = self.imagewidget.image * scale_factor
 
+        # Under PIL 1.1.6 the "mode" flag of asarray is needed, or the image will be garbage.
+        # Pillow 2.5.1 does not have this problem, but let's keep the flag to be safe.
+        im = Image.fromarray((scaled_image).astype(np.int32), mode="I")
+
+        metadata = self.get_metadata()
         camera = metadata["camera_device"].split("/")[-1]
         if "date" in metadata:
             date = metadata["date"].replace(" ", "_")
@@ -469,10 +478,13 @@ class LimaCameraWidget(TaurusWidget):
         if not filename.lower().endswith(".png"):
             filename += ".png"
 
+        # save image as 16 bit grayscale PNG
         im.save(str(filename), "PNG")
+
         self._save_path, name = os.path.split(filename)
         metadata["image_filename"] = name
 
+        # save metadata as JSON
         metadata_filename = os.path.splitext(filename)[0] + ".json"
         with open(metadata_filename, "w") as f:
             json.dump(metadata, f, indent=4)
