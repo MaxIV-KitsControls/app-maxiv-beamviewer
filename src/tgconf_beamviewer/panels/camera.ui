@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>545</width>
-    <height>768</height>
+    <width>387</width>
+    <height>724</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,43 +52,6 @@
         <property name="fieldGrowthPolicy">
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Exposure time (ms)</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="MAXLineEdit" name="acq_expo_time">
-          <property name="inputMask">
-           <string/>
-          </property>
-          <property name="model">
-           <string>acq_expo_time</string>
-          </property>
-          <property name="useParentModel">
-           <bool>false</bool>
-          </property>
-          <property name="autoApply">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Acquisition</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Trigger mode</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
@@ -103,30 +66,20 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="TaurusValueComboBox" name="trigger_mode_combobox">
-          <property name="autoApply">
-           <bool>true</bool>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Acq. Status</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
          <widget class="TaurusLabel" name="acq_status_label"/>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_7">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="MAXLineEdit" name="gain_label"/>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_16">
-          <property name="text">
-           <string>Gain</string>
+           <string>Acquisition</string>
           </property>
          </widget>
         </item>
@@ -147,6 +100,70 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Exposure time (ms)</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="MAXLineEdit" name="acq_expo_time">
+          <property name="inputMask">
+           <string/>
+          </property>
+          <property name="model">
+           <string>acq_expo_time</string>
+          </property>
+          <property name="useParentModel">
+           <bool>false</bool>
+          </property>
+          <property name="autoApply">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Gain</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="MAXLineEdit" name="gain_label"/>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Trigger mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="TaurusValueComboBox" name="trigger_mode_combobox">
+          <property name="autoApply">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>Frame number</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="TaurusLabel" name="acq_framenumber_label">
+          <property name="model">
+           <string/>
+          </property>
+          <property name="useParentModel">
+           <bool>false</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
