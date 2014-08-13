@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from functools import wraps
+import json
+from functools import wraps, partial
 
 from taurus.core import TaurusAttribute
 from taurus.qt.qtgui.panel import TaurusWidget
@@ -47,6 +48,8 @@ class throttle(object):
 
 class FastHistogramLUTItem(pg.HistogramLUTItem):
 
+    "A not-really-that-fast Histogram"
+
     def setImageItem(self, img):
         self.imageItem = img
         img.sigImageChanged.connect(self.imageChanged)
@@ -61,6 +64,8 @@ class BeamViewerImageWidget(TaurusWidget):
 
     image_trigger = QtCore.pyqtSignal()
     roi_trigger = QtCore.pyqtSignal(int, int, int, int)
+    vline_trigger = QtCore.pyqtSignal(int)
+    hline_trigger = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         TaurusWidget.__init__(self, parent)
@@ -71,6 +76,11 @@ class BeamViewerImageWidget(TaurusWidget):
 
         self.image = None
 
+        self.json_codec = CodecFactory().getCodec('JSON')
+
+        self.attr_image = None
+        self.attr_vline = self.attr_hline = None
+        self.attr_roi = None
 
     def _setup_ui(self):
         self.layout = QtGui.QVBoxLayout(self)
@@ -92,23 +102,28 @@ class BeamViewerImageWidget(TaurusWidget):
                               movable=False, pen=(0, 9),
                               scaleSnap=True, translateSnap=True)
         self.roi.addTranslateHandle(pos=(0, 0))
-        self.imageplot.addItem(self.roi)
+        #self.imageplot.addItem(self.roi)
         self.roi_trigger.connect(self.update_roi)
         self.roi.sigRegionChanged.connect(self.handle_roi_start)
         self.roi.sigRegionChangeFinished.connect(self.handle_roi_finish)
-        self._roi_dragged = self._roi_lock = False
+        self._roi_dragged = False
 
         # Vertical and horizontal lines for user point selection
+        # A.k.a crosshair
         self.verline = pg.InfiniteLine(pos=(100, 100), movable=True)
-        self.verline.sigPositionChanged.connect(self.lines_changed)
+        self.verline.sigPositionChanged.connect(self.handle_lines_changed)
+        self.verline.sigPositionChangeFinished.connect(self.handle_lines_finished)
         self.horline = pg.InfiniteLine(pos=(100, 100), angle=0, movable=True)
-        self.horline.sigPositionChanged.connect(self.lines_changed)
+        self.horline.sigPositionChanged.connect(self.handle_lines_changed)
+        self.horline.sigPositionChangeFinished.connect(self.handle_lines_finished)
+        self._line_dragged = False
+        self.vline_trigger.connect(self.update_vline)
+        self.hline_trigger.connect(self.update_hline)
 
         # Histogram
         self.hist = FastHistogramLUTItem(image=self.imageitem,
                                          fillHistogram=False)
         # self.graphics.addItem(self.hist, row=0, col=1)
-
         bottom_stuff = QtGui.QHBoxLayout()
         self.layout.addLayout(bottom_stuff)
 
@@ -116,14 +131,17 @@ class BeamViewerImageWidget(TaurusWidget):
         self.hist_checkbox.stateChanged.connect(self.show_histogram)
         bottom_stuff.addWidget(self.hist_checkbox)
 
+        self.roi_checkbox = QtGui.QCheckBox("ROI")
+        self.roi_checkbox.stateChanged.connect(self.show_roi)
+        bottom_stuff.addWidget(self.roi_checkbox)
+
         self.lines_checkbox = QtGui.QCheckBox("Lines")
         self.lines_checkbox.stateChanged.connect(self.show_lines)
         bottom_stuff.addWidget(self.lines_checkbox)
 
         self.linepos_label = QtGui.QLabel("linepos")
         bottom_stuff.addWidget(self.linepos_label)
-        self.lines_changed()
-
+        #self.handle_lines_changed()
         self.mousepos_label = QtGui.QLabel("mousepos")
         bottom_stuff.addWidget(self.mousepos_label)
         self.imageplot.scene().sigMouseMoved.connect(self.handle_mouse_move)
@@ -131,10 +149,30 @@ class BeamViewerImageWidget(TaurusWidget):
         self.set_framerate_limit()
 
     def setModel(self, device):
+
         TaurusWidget.setModel(self, device)
         beamviewer = self.getModelObj()
-        beamviewer.getAttribute("VideoImage").addListener(self.handle_image)
-        beamviewer.getAttribute("ROI").addListener(self.handle_roi)
+
+        if self.attr_image:
+            # get rid of any old listener
+            self.attr_image.removeListener(self.handle_image)
+        self.attr_image = beamviewer.getAttribute("VideoImage")
+        self.attr_image.addListener(self.handle_image)
+
+        if self.attr_roi:
+            self.attr_roi.removeListener(self.handle_roi)
+        self.attr_roi = beamviewer.getAttribute("ROI")
+        self.attr_roi.addListener(self.handle_roi)
+
+        if self.attr_vline:
+            self.attr_vline.removeListener(self.handle_vline)
+        self.attr_vline = beamviewer.getAttribute("verticalLine")
+        self.attr_vline.addListener(self.handle_vline)
+
+        if self.attr_hline:
+            self.attr_hline.removeListener(self.handle_hline)
+        self.attr_hline = beamviewer.getAttribute("horizontalLine")
+        self.attr_hline.addListener(self.handle_hline)
 
     def set_framerate_limit(self, fps=None):
         "Limit the image update frequency"
@@ -165,6 +203,7 @@ class BeamViewerImageWidget(TaurusWidget):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
                         PyTango.EventType.CHANGE_EVENT):
             roi = evt_value.value
+            roi = json.loads(roi)
             self.roi_trigger.emit(*roi)
 
     def update_roi(self, xmin, xmax, ymin, ymax):
@@ -175,7 +214,8 @@ class BeamViewerImageWidget(TaurusWidget):
             self.roi.setSize((xmax-xmin, ymax-ymin), finish=False)
 
     def handle_roi_start(self):
-        self._roi_dragged = True
+        #self._roi_dragged = True
+        pass
 
     def handle_roi_finish(self):
         x, y = self.roi.pos()
@@ -192,10 +232,38 @@ class BeamViewerImageWidget(TaurusWidget):
             self.imageplot.removeItem(self.horline)
             self.imageplot.removeItem(self.verline)
 
-    def lines_changed(self):
-        self.linepos_label.setText(
-            "Lines: x %d, y %d" % (self.verline.value(),
-                                   self.horline.value()))
+    # lots of repetition here; refactor!
+
+    def handle_lines_changed(self):
+        x, y = self.verline.value(), self.horline.value()
+        self.linepos_label.setText("Lines: x %d, y %d" % (x, y))
+
+    def handle_lines_start(self):
+        pass
+        #self._line_dragged = True
+
+    def handle_lines_finished(self):
+        self.attr_vline.write(self.verline.value())
+        self.attr_hline.write(self.horline.value())
+        self._line_dragged = False
+
+    def update_vline(self, value):
+        self.verline.setValue(value)
+
+    def update_hline(self, value):
+        self.horline.setValue(value)
+
+    def handle_hline(self, evt_src, evt_type, evt_value):
+        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
+                        PyTango.EventType.CHANGE_EVENT):
+            pos = evt_value.value
+            self.hline_trigger.emit(pos)
+
+    def handle_vline(self, evt_src, evt_type, evt_value):
+        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
+                        PyTango.EventType.CHANGE_EVENT):
+            pos = evt_value.value
+            self.vline_trigger.emit(pos)
 
     def show_histogram(self, show=True):
         if show:
