@@ -6,7 +6,6 @@ from taurus.core import TaurusAttribute
 from taurus.qt.qtgui.panel import TaurusWidget
 from taurus.qt import QtGui, QtCore
 from taurus.core.util import CodecFactory
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
 from pyqtgraph.Point import *
 import pyqtgraph as pg
 
