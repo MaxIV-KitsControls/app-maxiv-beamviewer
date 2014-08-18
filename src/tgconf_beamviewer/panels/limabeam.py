@@ -128,6 +128,7 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.camera_image_widget.layout().addWidget(self.imagewidget)
         self.json_codec = CodecFactory().getCodec('JSON')
         self._save_path = ""
+        self._bpm_result = {}
 
         self.bviewer = None
 
@@ -364,8 +365,8 @@ class LimaCameraWidget(TaurusWidget):
         if self._show_beam_position:
             x = self._bpm_result.get("beam_center_x", 0)
             y = self._bpm_result.get("beam_center_y", 0)
-            self.imagewidget.update_line("v", x)
-            self.imagewidget.update_line("h", y)
+            self.imagewidget.update_vline(x)
+            self.imagewidget.update_hline(y)
             self.imagewidget.handle_lines_finished()
 
     def set_bpm_roi(self, roi):
