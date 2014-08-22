@@ -120,8 +120,8 @@ class BeamViewerImageWidget(TaurusWidget):
         self.hline_trigger.connect(self.update_hline)
 
         # Histogram
-        self.hist = FastHistogramLUTItem(image=self.imageitem,
-                                         fillHistogram=False)
+        self.hist = pg.HistogramLUTItem(image=self.imageitem,
+                                        fillHistogram=False)
         # self.graphics.addItem(self.hist, row=0, col=1)
         bottom_stuff = QtGui.QHBoxLayout()
         self.layout.addLayout(bottom_stuff)
@@ -146,6 +146,11 @@ class BeamViewerImageWidget(TaurusWidget):
         self.imageplot.scene().sigMouseMoved.connect(self.handle_mouse_move)
 
         self.set_framerate_limit()
+
+    def contextMenuEvent(self,event):
+        # Note: This is needed in order for the widget to accept right clicks (e.g. menu).
+        # Otherwise, taurus eats them.
+        event.accept()
 
     def setModel(self, device):
 
@@ -190,7 +195,7 @@ class BeamViewerImageWidget(TaurusWidget):
 
     def _update_image(self):
         self.imageitem.setImage(self.image.T, autoLevels=False,
-                                useScale=None, lut=None, autoDownsample=False)
+                                autoDownsample=True)
 
     def show_roi(self, show=True):
         if show:
