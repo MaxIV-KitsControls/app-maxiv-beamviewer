@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'camera.ui'
 #
-# Created: Tue Aug 12 17:04:33 2014
+# Created: Mon Aug 25 18:43:46 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_Camera(object):
     def setupUi(self, Camera):
         Camera.setObjectName(_fromUtf8("Camera"))
-        Camera.resize(387, 724)
+        Camera.resize(633, 733)
         self.verticalLayout_2 = QtGui.QVBoxLayout(Camera)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.splitter = QtGui.QSplitter(Camera)
@@ -256,6 +256,17 @@ class Ui_Camera(object):
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem)
         self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
+        self.Settings = QtGui.QWidget()
+        self.Settings.setObjectName(_fromUtf8("Settings"))
+        self.formLayout_4 = QtGui.QFormLayout(self.Settings)
+        self.formLayout_4.setObjectName(_fromUtf8("formLayout_4"))
+        self.label_21 = QtGui.QLabel(self.Settings)
+        self.label_21.setObjectName(_fromUtf8("label_21"))
+        self.formLayout_4.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_21)
+        self.max_framerate_spinbox = QtGui.QSpinBox(self.Settings)
+        self.max_framerate_spinbox.setObjectName(_fromUtf8("max_framerate_spinbox"))
+        self.formLayout_4.setWidget(0, QtGui.QFormLayout.FieldRole, self.max_framerate_spinbox)
+        self.tabWidget.addTab(self.Settings, _fromUtf8(""))
         self.verticalLayout_2.addWidget(self.splitter)
 
         self.retranslateUi(Camera)
@@ -299,6 +310,8 @@ class Ui_Camera(object):
         self.label_14.setText(_translate("Camera", "FWHM Y:", None))
         self.label_13.setText(_translate("Camera", "FWHM X:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Camera", "BPM", None))
+        self.label_21.setText(_translate("Camera", "Limit image frame rate", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Settings), _translate("Camera", "Settings", None))
 
 from taurus.qt.qtgui.display import TaurusLabel
 from taurus.qt.qtgui.input import TaurusValueComboBox, TaurusValueCheckBox

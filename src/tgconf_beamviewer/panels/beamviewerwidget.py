@@ -1,8 +1,9 @@
+import base64
 from datetime import datetime, timedelta
 import json
 from functools import wraps, partial
 
-from taurus.core import TaurusAttribute
+from taurus import Attribute, Device
 from taurus.qt.qtgui.panel import TaurusWidget
 from taurus.qt import QtGui, QtCore
 from taurus.core.util import CodecFactory
@@ -11,57 +12,15 @@ import pyqtgraph as pg
 
 import PyTango
 
+from util import throttle
+
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
 
 
-class throttle(object):
-    """
-    Decorator that prevents a function from being called more than once every
-    time period.
-
-    To create a function that cannot be called more than once a minute:
-
-        @throttle(minutes=1)
-        def my_fun():
-            pass
-    """
-    def __init__(self, seconds=0, minutes=0, hours=0):
-        self.throttle_period = timedelta(
-            seconds=seconds, minutes=minutes, hours=hours
-        )
-        self.time_of_last_call = datetime.min
-
-    def __call__(self, fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            now = datetime.now()
-            time_since_last_call = now - self.time_of_last_call
-
-            if time_since_last_call > self.throttle_period:
-                self.time_of_last_call = now
-                return fn(*args, **kwargs)
-
-        return wrapper
-
-
-class FastHistogramLUTItem(pg.HistogramLUTItem):
-
-    "A not-really-that-fast Histogram"
-
-    def setImageItem(self, img):
-        self.imageItem = img
-        img.sigImageChanged.connect(self.imageChanged)
-        img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
-        #self.gradientChanged()
-        self.regionChanged()
-        self.imageChanged(autoLevel=False)
-        #self.vb.autoRange()
-
-
 class BeamViewerImageWidget(TaurusWidget):
 
-    image_trigger = QtCore.pyqtSignal()
+    image_trigger = QtCore.pyqtSignal(int)
     roi_trigger = QtCore.pyqtSignal(int, int, int, int)
     vline_trigger = QtCore.pyqtSignal(int)
     hline_trigger = QtCore.pyqtSignal(int)
@@ -71,7 +30,7 @@ class BeamViewerImageWidget(TaurusWidget):
         self._setup_ui()
 
         self.codec = CodecFactory().getCodec("VIDEO_IMAGE")
-        self.image_trigger.connect(self.update_image)
+        self.image_trigger.connect(self.update_image_wrapper)
 
         self.image = None
 
@@ -80,6 +39,7 @@ class BeamViewerImageWidget(TaurusWidget):
         self.attr_image = None
         self.attr_vline = self.attr_hline = None
         self.attr_roi = None
+        self.attr_framenumber = None
 
     def _setup_ui(self):
         self.layout = QtGui.QVBoxLayout(self)
@@ -145,7 +105,7 @@ class BeamViewerImageWidget(TaurusWidget):
         bottom_stuff.addWidget(self.mousepos_label)
         self.imageplot.scene().sigMouseMoved.connect(self.handle_mouse_move)
 
-        self.set_framerate_limit()
+        self.set_framerate_limit(10)
 
     def contextMenuEvent(self,event):
         # Note: This is needed in order for the widget to accept right clicks (e.g. menu).
@@ -154,29 +114,35 @@ class BeamViewerImageWidget(TaurusWidget):
 
     def setModel(self, device):
 
-        TaurusWidget.setModel(self, device)
-        beamviewer = self.getModelObj()
+        self.limaccd = Device(str(device))
+        bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
 
-        if self.attr_image:
+        TaurusWidget.setModel(self, bviewer)
+        self.beamviewer = self.getModelObj()
+
+        if self.attr_framenumber:
             # get rid of any old listener
-            self.attr_image.removeListener(self.handle_image)
-        self.attr_image = beamviewer.getAttribute("VideoImage")
-        self.attr_image.addListener(self.handle_image)
+            self.attr_framenumber.removeListener(self.handle_framenumber)
+        self.attr_framenumber = self.beamviewer.getAttribute("FrameNumber")
+        self.attr_framenumber.addListener(self.handle_framenumber)
 
         if self.attr_roi:
             self.attr_roi.removeListener(self.handle_roi)
-        self.attr_roi = beamviewer.getAttribute("ROI")
+        self.attr_roi = self.beamviewer.getAttribute("ROI")
         self.attr_roi.addListener(self.handle_roi)
 
         if self.attr_vline:
             self.attr_vline.removeListener(self.handle_vline)
-        self.attr_vline = beamviewer.getAttribute("verticalLine")
+        self.attr_vline = self.beamviewer.getAttribute("verticalLine")
         self.attr_vline.addListener(self.handle_vline)
 
         if self.attr_hline:
             self.attr_hline.removeListener(self.handle_hline)
-        self.attr_hline = beamviewer.getAttribute("horizontalLine")
+        self.attr_hline = self.beamviewer.getAttribute("horizontalLine")
         self.attr_hline.addListener(self.handle_hline)
+
+        # read image if possible
+        self._update_image()
 
     def set_framerate_limit(self, fps=None):
         "Limit the image update frequency"
@@ -187,15 +153,23 @@ class BeamViewerImageWidget(TaurusWidget):
         else:
             self.update_image = self._update_image
 
-    def handle_image(self, evt_src, evt_type, evt_value):
+    def update_image_wrapper(self, frame_number):
+        self.update_image(frame_number)
+
+    def _update_image(self, frame_number=-1):
+        imagedata = self.beamviewer.GetImage(frame_number)
+        type_, image = self.codec.decode(imagedata)
+        self.imageitem.setImage(image.T, autoLevels=False, autoDownsample=True)
+
+    def handle_framenumber(self, evt_src, evt_type, evt_value):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
                         PyTango.EventType.CHANGE_EVENT):
-            type_, self.image = self.codec.decode(evt_value.value)
-            self.image_trigger.emit()
-
-    def _update_image(self):
-        self.imageitem.setImage(self.image.T, autoLevels=False,
-                                autoDownsample=True)
+            # The idea is to inform the widget that a new image is available, and
+            # then allow it to choose whether to actually read it, depending on
+            # max FPS settings, etc. This seems more efficient than sending the
+            # images themselves around as events whether anyone needs them or not.
+            frame_number = evt_value.value
+            self.image_trigger.emit(frame_number)
 
     def show_roi(self, show=True):
         if show:
@@ -205,7 +179,7 @@ class BeamViewerImageWidget(TaurusWidget):
 
     def handle_roi(self, evt_src, evt_type, evt_value):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT):
+                        PyTango.EventType.CHANGE_EVENT,):
             roi = evt_value.value
             roi = json.loads(roi)
             self.roi_trigger.emit(*roi)
@@ -218,8 +192,7 @@ class BeamViewerImageWidget(TaurusWidget):
             self.roi.setSize((xmax-xmin, ymax-ymin), finish=False)
 
     def handle_roi_start(self):
-        #self._roi_dragged = True
-        pass
+        self._roi_dragged = True
 
     def handle_roi_finish(self):
         x, y = self.roi.pos()
@@ -243,8 +216,7 @@ class BeamViewerImageWidget(TaurusWidget):
         self.linepos_label.setText("Lines: x %d, y %d" % (x, y))
 
     def handle_lines_start(self):
-        pass
-        #self._line_dragged = True
+        self._line_dragged = True
 
     def handle_lines_finished(self):
         self.attr_vline.write(self.verline.value())

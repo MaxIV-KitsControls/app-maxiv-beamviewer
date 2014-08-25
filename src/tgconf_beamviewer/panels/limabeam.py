@@ -22,6 +22,8 @@ from taurus import Attribute, Device
 from camera_ui import Ui_Camera
 from beamviewerwidget import BeamViewerImageWidget
 
+from util import throttle
+
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
 
@@ -116,7 +118,7 @@ class LimaCameraWidget(TaurusWidget):
 
     limaccd = None
     trigger = QtCore.pyqtSignal()
-    bpm_trigger = QtCore.pyqtSignal()
+    bpm_trigger = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         TaurusWidget.__init__(self, parent)
@@ -132,7 +134,7 @@ class LimaCameraWidget(TaurusWidget):
 
         self.bviewer = None
 
-        self.bpm_trigger.connect(self.update_bpm_values)
+        self.bpm_trigger.connect(self.update_bpm_values_wrapper)
         self.bpm_roi = None
         self.bpm_result = None
         self.acq_status = None
@@ -156,6 +158,12 @@ class LimaCameraWidget(TaurusWidget):
         self.yprof = ProfilePlotWidget("Profile Y", y=True)
         self.ui.bpm_profile_y_layout.addWidget(self.yprof)
 
+        self.ui.max_framerate_spinbox.setValue(10)
+        self.ui.max_framerate_spinbox.setMinimum(1)
+        self.ui.max_framerate_spinbox.valueChanged.connect(self.imagewidget.set_framerate_limit)
+        self.set_framerate_limit(10)
+        self.ui.max_framerate_spinbox.valueChanged.connect(self.set_framerate_limit)
+
     def setModel(self, model):
 
         # If we're switching cameras, we first stop the previous one
@@ -175,7 +183,7 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.status_tlabel.setModel("%s/Status" % model)
 
         # Camera image
-        self.imagewidget.setModel(bviewer)
+        self.imagewidget.setModel(model)
 
         # Acquisition settings
         self.ui.camera_type_label.setText(self.limaccd.camera_type)
@@ -216,8 +224,8 @@ class LimaCameraWidget(TaurusWidget):
         if self.bpm_result:
             # disconnect any previous listener
             self.bpm_result.removeListener(self.handle_bpm_result)
-        self.bpm_result = self.bviewer.getAttribute("BPMResult")
-        self.bpm_result.addListener(self.handle_bpm_result)
+        self.frame_number = self.bviewer.getAttribute("FrameNumber")
+        self.frame_number.addListener(self.handle_frame_number)
 
     def get_metadata(self):
         "Collect various data about the latest image"
@@ -331,17 +339,33 @@ class LimaCameraWidget(TaurusWidget):
     def handle_bpm_show_position(self, value):
         self._show_beam_position = value
 
-    def handle_bpm_result(self, evt_src, evt_type, evt_value):
-        """Handle result from the Lima BPM calculations"""
+    def handle_frame_number(self, evt_src, evt_type, evt_data):
         if (evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                         PyTango.EventType.CHANGE_EVENT) and evt_value):
-            self._bpm_result = self.json_codec.decode(evt_value.value)[1]
-            self.bpm_trigger.emit()
+                         PyTango.EventType.CHANGE_EVENT) and evt_data):
+            frame_number = evt_data.value
+            self.bpm_trigger.emit(frame_number)
 
-    def update_bpm_values(self):
+    def set_framerate_limit(self, fps=None):
+        "Limit the BPM update frequency"
+        if fps:
+            self.update_interval = 1/float(fps)
+            self.update_bpm_values = throttle(seconds=self.update_interval)(
+                self._update_bpm_values)
+        else:
+            self.update_bpm_values = self._update_bpm_values
+
+    def update_bpm_values_wrapper(self, frame_number):
+        self.update_bpm_values(frame_number)
+
+    def _update_bpm_values(self, frame_number):
         """Update GUI with BPM results"""
+
+        self.ui.acq_framenumber_label.setText(str(frame_number))
+
+        bpm_result = self.bviewer.GetBPMResult(frame_number)
+        self._bpm_result = self.json_codec.decode(bpm_result)[1]
+
         fmt = "%.2f"
-        self.ui.acq_framenumber_label.setText(str((self._bpm_result.get("frame_number", "-"))))
         self.ui.roi_label.setText(str(self._bpm_result.get("roi")))
         self.ui.beam_intensity_label.setText(
             fmt % self._bpm_result.get("beam_intensity", 0))
@@ -359,7 +383,6 @@ class LimaCameraWidget(TaurusWidget):
             self._bpm_result.get("beam_center_x", 0))
         self.yprof.set_data(
             self._bpm_result["roi"],
-            #[0, 100, 0, 100],  # self.imagewidget._roidata,
             decode_base64_array(self._bpm_result.get("profile_y", 0)),
             self._bpm_result.get("beam_center_y", 0))
         if self._show_beam_position:
