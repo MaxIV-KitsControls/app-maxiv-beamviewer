@@ -6,7 +6,8 @@ from PyTango import Database
 class CameraSelector(QtGui.QComboBox):
     domain = 'lima'
     family = 'limaccd'
-    pos = '__s_cen'
+    pos = '__si'
+    default = float('inf')
 
     def __init__(self, parent=None):
         QtGui.QComboBox.__init__(self, parent)
@@ -22,9 +23,10 @@ class CameraSelector(QtGui.QComboBox):
             device = "/".join((self.domain, self.family, member))
             prop = db.get_device_property(device, self.pos)[self.pos]
             try:
-                device_dct[device] = float(prop[0])
+                value = (float(prop[0]) + float(prop[1])) / 2
             except (ValueError, IndexError):
-                device_dct[device] = float('inf')
+                value = self.default
+            device_dct[device] = value
         # Add item in sorted order
         for device in sorted(device_dct, key=device_dct.get):
             self.addItem(device)
