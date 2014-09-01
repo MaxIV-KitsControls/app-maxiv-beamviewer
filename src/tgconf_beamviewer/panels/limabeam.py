@@ -459,10 +459,6 @@ class LimaCameraWidget(TaurusWidget):
 
     def handle_calibration(self, *args):
         if self.imagewidget._use_calibration:
-            # ruler = self.imagewidget._ruler
-            # rx, ry = ruler["pos"]
-            # rw, rh = ruler["size"]
-            # w, h = self.imagewidget._ruler_calibration
             xscale, yscale = self.imagewidget.scale
             xoffset, yoffset = self._get_offset()
             self.xprof.scale = xscale
@@ -482,12 +478,10 @@ class LimaCameraWidget(TaurusWidget):
                         self.ui.calib_top_spinbox.value()],
                 "size": [self.ui.calib_width_spinbox.value(),
                          self.ui.calib_height_spinbox.value()]}
-        print data
         self.bviewer.getAttribute("measurementRuler").write(json.dumps(data))
 
     def update_calibration(self):
         data = self.imagewidget._ruler
-        print "update_calibration", data
         self.ui.calib_left_spinbox.setValue(data["pos"][0])
         self.ui.calib_top_spinbox.setValue(data["pos"][1])
         self.ui.calib_width_spinbox.setValue(data["size"][0])
