@@ -74,16 +74,18 @@ class ProfilePlotWidget(TaurusWidget):
         self.data = None
         self.center = None
         self.trigger.connect(self._show_graph)
+        self.scale = 1.0
+        self.offset = 0.
 
     def set_data(self, roi, data, center):
         if self.y:
-            ymin, ymax = roi[2], roi[2] + len(data)
-            self.data = (-np.arange(ymin, ymax), data)
-            self.center = min(max(center, ymin), ymax)
+            ymin, ymax = roi[2] + self.offset, roi[2] + len(data) + self.offset
+            self.data = (-np.arange(ymin, ymax) * self.scale, data)
+            self.center = min(max(center+self.offset, ymin), ymax) * self.scale
         else:
-            xmin, xmax = roi[0], roi[0] + len(data)
-            self.data = (np.arange(xmin, xmax), data)
-            self.center = min(max(center, xmin), xmax)
+            xmin, xmax = roi[0] + self.offset, roi[0] + len(data) + self.offset
+            self.data = (np.arange(xmin, xmax) * self.scale, data)
+            self.center = min(max(center+self.offset, xmin), xmax) * self.scale
         self.trigger.emit()
 
     def _show_graph(self):
@@ -131,6 +133,7 @@ class LimaCameraWidget(TaurusWidget):
         self.json_codec = CodecFactory().getCodec('JSON')
         self._save_path = ""
         self._bpm_result = {}
+        self._frame_number = -1
 
         self.bviewer = None
 
@@ -163,6 +166,10 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.max_framerate_spinbox.valueChanged.connect(self.imagewidget.set_framerate_limit)
         self.set_framerate_limit(10)
         self.ui.max_framerate_spinbox.valueChanged.connect(self.set_framerate_limit)
+
+        self.imagewidget.ruler_trigger.connect(self.handle_calibration)
+        self.imagewidget.ruler_calibration_trigger.connect(self.handle_calibration)
+        self.ui.calib_use_checkbox.stateChanged.connect(self.handle_calibration)
 
     def setModel(self, model):
 
@@ -227,6 +234,13 @@ class LimaCameraWidget(TaurusWidget):
         self.frame_number = self.bviewer.getAttribute("FrameNumber")
         self.frame_number.addListener(self.handle_frame_number)
 
+        # Calibration
+        self.ui.calib_use_checkbox.setChecked(self.imagewidget._use_calibration)
+        self.ui.calib_use_checkbox.stateChanged.connect(self.imagewidget.use_calibration)
+        self.ui.calib_rect_label.setModel("%s/measurementRuler" % bviewer)
+        self.ui.calib_rect_width_lineedit.setModel("%s/measurementRulerWidth" % bviewer)
+        self.ui.calib_rect_height_lineedit.setModel("%s/measurementRulerHeight" % bviewer)
+
     def get_metadata(self):
         "Collect various data about the latest image"
 
@@ -236,13 +250,15 @@ class LimaCameraWidget(TaurusWidget):
             timestamp = time.time()
         metadata["date"] = datetime.datetime.fromtimestamp(timestamp)\
                                             .strftime('%Y-%m-%d %H:%M:%S')
+        metadata["timestamp"] = timestamp
         metadata["camera_device"] = self._devicename
         metadata["camera_type"] = self.limaccd.camera_type
 
-        metadata["width"] = {"value": self.bviewer.Width, "unit": "pixels"}
-        metadata["height"] = {"value": self.bviewer.Height, "unit": "pixels"}
+        metadata["width"] = {"value": self.bviewer.Width, "unit": "pixel"}
+        metadata["height"] = {"value": self.bviewer.Height, "unit": "pixel"}
         metadata["acquisition_time"] = {"value": self.bviewer.Exposure,
                                         "unit": "ms"}
+        metadata["frame_number"] = self._frame_number
         try:
             rotation = int(self.bviewer.Rotation)
         except ValueError:
@@ -251,8 +267,19 @@ class LimaCameraWidget(TaurusWidget):
         metadata["gain"] = {"value": self.bviewer.Gain}
         metadata["binning"] = {"value": self.bviewer.Binning}
         metadata["trigger_mode"] = {"value": self.bviewer.TriggerMode}
-        metadata["bpm_result"] = self._bpm_result
-
+        metadata["roi"] = {"value": self.bviewer.ROI, "unit": "pixel"}
+        metadata["crosshair"] = {"value": [self.bviewer.verticalLine,
+                                           self.bviewer.horizontalLine],
+                                 "unit": "pixel"}
+        metadata["measurement"] = {"value": self.bviewer.measurementRuler,
+                                   "unit": "pixel"}
+        metadata["measurement_size"] = {
+            "value": [self.bviewer.measurementRulerWidth,
+                      self.bviewer.measurementRulerHeight],
+            "unit": "mm"}
+        metadata["pixel_scale"] = {"value": self._get_scale(),
+                                   "unit": "mm/pixel"}
+        metadata["bpm_result"] = {"value": self._bpm_result}
         return metadata
 
     def start_acq(self):
@@ -342,8 +369,8 @@ class LimaCameraWidget(TaurusWidget):
     def handle_frame_number(self, evt_src, evt_type, evt_data):
         if (evt_type in (PyTango.EventType.PERIODIC_EVENT,
                          PyTango.EventType.CHANGE_EVENT) and evt_data):
-            frame_number = evt_data.value
-            self.bpm_trigger.emit(frame_number)
+            self._frame_number = evt_data.value
+            self.bpm_trigger.emit(self._frame_number)
 
     def set_framerate_limit(self, fps=None):
         "Limit the BPM update frequency"
@@ -366,17 +393,19 @@ class LimaCameraWidget(TaurusWidget):
         self._bpm_result = self.json_codec.decode(bpm_result)[1]
 
         fmt = "%.2f"
+        xscale, yscale = self._get_scale()
+        xoffset, yoffset = self._get_offset()
         self.ui.roi_label.setText(str(self._bpm_result.get("roi")))
         self.ui.beam_intensity_label.setText(
             fmt % self._bpm_result.get("beam_intensity", 0))
         self.ui.beam_center_x_label.setText(
-            fmt % self._bpm_result.get("beam_center_x", 0))
+            fmt % ((self._bpm_result.get("beam_center_x", 0) + xoffset) * xscale))
         self.ui.beam_center_y_label.setText(
-            fmt % self._bpm_result.get("beam_center_y", 0))
+            fmt % ((self._bpm_result.get("beam_center_y", 0) + yoffset) * yscale))
         self.ui.beam_fwhm_x_label.setText(
-            fmt % self._bpm_result.get("beam_fwhm_x", 0))
+            fmt % (self._bpm_result.get("beam_fwhm_x", 0) * xscale))
         self.ui.beam_fwhm_y_label.setText(
-            fmt % self._bpm_result.get("beam_fwhm_y", 0))
+            fmt % (self._bpm_result.get("beam_fwhm_y", 0) * yscale))
         self.xprof.set_data(
             self._bpm_result["roi"],
             decode_base64_array(self._bpm_result.get("profile_x", 0)),
@@ -404,6 +433,39 @@ class LimaCameraWidget(TaurusWidget):
             self.bpm_roi.write([x, x+w, y, y+h])
             self._roidata = (x, x+h, y, y+w)
             self.ui.roi_label.setText("x: %d, y: %d, w: %d, h: %d" % (x, y, w, h))
+
+    def _get_offset(self):
+        if self.imagewidget._use_calibration:
+            ruler = self.imagewidget._ruler
+            rx, ry = ruler["pos"]
+            rw, rh = ruler["size"]
+            return -(rx + rw/2), -(ry + rh/2)
+        else:
+            return (0., 0.)
+
+    def _get_scale(self):
+        if self.imagewidget._use_calibration:
+            return self.imagewidget.scale
+        else:
+            return (1.0, 1.0)
+
+    def handle_calibration(self, *args):
+        if self.imagewidget._use_calibration:
+            # ruler = self.imagewidget._ruler
+            # rx, ry = ruler["pos"]
+            # rw, rh = ruler["size"]
+            # w, h = self.imagewidget._ruler_calibration
+            xscale, yscale = self.imagewidget.scale
+            xoffset, yoffset = self._get_offset()
+            self.xprof.scale = xscale
+            self.xprof.offset = xoffset
+            self.yprof.scale = yscale
+            self.yprof.offset = yoffset
+        else:
+            self.xprof.scale = 1.0
+            self.xprof.offset = 0
+            self.yprof.scale = 1.0
+            self.yprof.offset = 0
 
 
 def main():

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'camera.ui'
 #
-# Created: Mon Aug 25 18:43:46 2014
+# Created: Mon Sep  1 10:49:02 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -256,6 +256,37 @@ class Ui_Camera(object):
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem)
         self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
+        self.tab_4 = QtGui.QWidget()
+        self.tab_4.setObjectName(_fromUtf8("tab_4"))
+        self.formLayout_5 = QtGui.QFormLayout(self.tab_4)
+        self.formLayout_5.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout_5.setObjectName(_fromUtf8("formLayout_5"))
+        self.label_23 = QtGui.QLabel(self.tab_4)
+        self.label_23.setObjectName(_fromUtf8("label_23"))
+        self.formLayout_5.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_23)
+        self.calib_rect_label = TaurusLabel(self.tab_4)
+        self.calib_rect_label.setObjectName(_fromUtf8("calib_rect_label"))
+        self.formLayout_5.setWidget(1, QtGui.QFormLayout.FieldRole, self.calib_rect_label)
+        self.label_26 = QtGui.QLabel(self.tab_4)
+        self.label_26.setObjectName(_fromUtf8("label_26"))
+        self.formLayout_5.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_26)
+        self.label_27 = QtGui.QLabel(self.tab_4)
+        self.label_27.setObjectName(_fromUtf8("label_27"))
+        self.formLayout_5.setWidget(3, QtGui.QFormLayout.LabelRole, self.label_27)
+        self.calib_rect_width_lineedit = MAXLineEdit(self.tab_4)
+        self.calib_rect_width_lineedit.setObjectName(_fromUtf8("calib_rect_width_lineedit"))
+        self.formLayout_5.setWidget(2, QtGui.QFormLayout.FieldRole, self.calib_rect_width_lineedit)
+        self.calib_rect_height_lineedit = MAXLineEdit(self.tab_4)
+        self.calib_rect_height_lineedit.setObjectName(_fromUtf8("calib_rect_height_lineedit"))
+        self.formLayout_5.setWidget(3, QtGui.QFormLayout.FieldRole, self.calib_rect_height_lineedit)
+        self.label_28 = QtGui.QLabel(self.tab_4)
+        self.label_28.setText(_fromUtf8(""))
+        self.label_28.setObjectName(_fromUtf8("label_28"))
+        self.formLayout_5.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_28)
+        self.calib_use_checkbox = QtGui.QCheckBox(self.tab_4)
+        self.calib_use_checkbox.setObjectName(_fromUtf8("calib_use_checkbox"))
+        self.formLayout_5.setWidget(0, QtGui.QFormLayout.FieldRole, self.calib_use_checkbox)
+        self.tabWidget.addTab(self.tab_4, _fromUtf8(""))
         self.Settings = QtGui.QWidget()
         self.Settings.setObjectName(_fromUtf8("Settings"))
         self.formLayout_4 = QtGui.QFormLayout(self.Settings)
@@ -270,7 +301,7 @@ class Ui_Camera(object):
         self.verticalLayout_2.addWidget(self.splitter)
 
         self.retranslateUi(Camera)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(Camera)
 
     def retranslateUi(self, Camera):
@@ -310,6 +341,11 @@ class Ui_Camera(object):
         self.label_14.setText(_translate("Camera", "FWHM Y:", None))
         self.label_13.setText(_translate("Camera", "FWHM X:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Camera", "BPM", None))
+        self.label_23.setText(_translate("Camera", "Rectangle", None))
+        self.label_26.setText(_translate("Camera", "Rectangle width [mm]", None))
+        self.label_27.setText(_translate("Camera", "Rectangle height [mm]", None))
+        self.calib_use_checkbox.setText(_translate("Camera", "Use Calibration", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("Camera", "Calibration", None))
         self.label_21.setText(_translate("Camera", "Limit image frame rate", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Settings), _translate("Camera", "Settings", None))
 

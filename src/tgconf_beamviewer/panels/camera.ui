@@ -42,7 +42,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -450,6 +450,60 @@
            </size>
           </property>
          </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_4">
+       <attribute name="title">
+        <string>Calibration</string>
+       </attribute>
+       <layout class="QFormLayout" name="formLayout_5">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_23">
+          <property name="text">
+           <string>Rectangle</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="TaurusLabel" name="calib_rect_label"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Rectangle width [mm]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_27">
+          <property name="text">
+           <string>Rectangle height [mm]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="MAXLineEdit" name="calib_rect_width_lineedit"/>
+        </item>
+        <item row="3" column="1">
+         <widget class="MAXLineEdit" name="calib_rect_height_lineedit"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_28">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="calib_use_checkbox">
+          <property name="text">
+           <string>Use Calibration</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

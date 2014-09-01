@@ -24,6 +24,8 @@ class BeamViewerImageWidget(TaurusWidget):
     roi_trigger = QtCore.pyqtSignal(int, int, int, int)
     vline_trigger = QtCore.pyqtSignal(int)
     hline_trigger = QtCore.pyqtSignal(int)
+    ruler_trigger = QtCore.pyqtSignal()
+    ruler_calibration_trigger = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         TaurusWidget.__init__(self, parent)
@@ -40,6 +42,11 @@ class BeamViewerImageWidget(TaurusWidget):
         self.attr_vline = self.attr_hline = None
         self.attr_roi = None
         self.attr_framenumber = None
+        self.attr_measurementruler = None
+        self.attr_measurementrulerwidth = None
+        self.attr_measurementrulerheight = None
+
+        self.use_calibration(True)
 
     def _setup_ui(self):
         self.layout = QtGui.QVBoxLayout(self)
@@ -52,6 +59,8 @@ class BeamViewerImageWidget(TaurusWidget):
         self.imageplot.setAspectLocked()
         self.imageplot.invertY()
         self.imageplot.showGrid(x=True, y=True)
+        self.imageplot.getAxis("bottom").setLabel("Pixels")
+        self.imageplot.getAxis("left").setLabel("Pixels")
 
         self.imageitem = pg.ImageItem()
         self.imageplot.addItem(self.imageitem)
@@ -70,10 +79,10 @@ class BeamViewerImageWidget(TaurusWidget):
         # Vertical and horizontal lines for user point selection
         # A.k.a crosshair
         self.verline = pg.InfiniteLine(pos=(100, 100), movable=True)
-        self.verline.sigPositionChanged.connect(self.handle_lines_changed)
+        self.verline.sigPositionChanged.connect(self.update_linepos_label)
         self.verline.sigPositionChangeFinished.connect(self.handle_lines_finished)
         self.horline = pg.InfiniteLine(pos=(100, 100), angle=0, movable=True)
-        self.horline.sigPositionChanged.connect(self.handle_lines_changed)
+        self.horline.sigPositionChanged.connect(self.update_linepos_label)
         self.horline.sigPositionChangeFinished.connect(self.handle_lines_finished)
         self._line_dragged = False
         self.vline_trigger.connect(self.update_vline)
@@ -98,12 +107,36 @@ class BeamViewerImageWidget(TaurusWidget):
         self.lines_checkbox.stateChanged.connect(self.show_lines)
         bottom_stuff.addWidget(self.lines_checkbox)
 
+        self.ruler_checkbox = QtGui.QCheckBox("Calib")
+        self.ruler_checkbox.stateChanged.connect(self.show_ruler)
+        bottom_stuff.addWidget(self.ruler_checkbox)
+
         self.linepos_label = QtGui.QLabel("linepos")
-        bottom_stuff.addWidget(self.linepos_label)
+        bottom_stuff.addWidget(self.linepos_label, stretch=2,
+                               alignment=QtCore.Qt.AlignCenter)
+
         #self.handle_lines_changed()
         self.mousepos_label = QtGui.QLabel("mousepos")
-        bottom_stuff.addWidget(self.mousepos_label)
+        bottom_stuff.addWidget(self.mousepos_label, stretch=2,
+                               alignment=QtCore.Qt.AlignCenter)
         self.imageplot.scene().sigMouseMoved.connect(self.handle_mouse_move)
+
+        # measurement ruler
+        self.ruler = pg.RectROI((0, 0), (100, 100), movable=False, pen=(0, 255, 0))
+        self.ruler.addScaleHandle(pos=(0, 0), center=(1, 1))
+        self.ruler.addScaleHandle(pos=(1, 0), center=(0, 1))
+        self.ruler.addScaleHandle(pos=(0, 1), center=(1, 0))
+        self.ruler.addTranslateHandle(pos=(0.5, 0.5))
+        self.ruler.sigRegionChanged.connect(self.handle_ruler_start)
+        self.ruler.sigRegionChangeFinished.connect(self.handle_ruler_changed)
+        self.ruler_trigger.connect(self.update_ruler)
+        self.ruler_calibration_trigger.connect(self.calibrate_axes)
+        self._ruler_dragged = False
+        self._ruler = None
+        self._ruler_calibration = [5.0, 5.0]
+        #self.show_ruler()
+        self.center = (0., 0.)
+        self.scale = (1., 1.)
 
         self.set_framerate_limit(10)
 
@@ -111,6 +144,10 @@ class BeamViewerImageWidget(TaurusWidget):
         # Note: This is needed in order for the widget to accept right clicks (e.g. menu).
         # Otherwise, taurus eats them.
         event.accept()
+
+    def use_calibration(self, value=True):
+        self._use_calibration = value
+        self._point_format = "[mm]: %.3f, %.3f" if value else "[px]: %d, %d"
 
     def setModel(self, device):
 
@@ -141,6 +178,21 @@ class BeamViewerImageWidget(TaurusWidget):
         self.attr_hline = self.beamviewer.getAttribute("horizontalLine")
         self.attr_hline.addListener(self.handle_hline)
 
+        if self.attr_measurementruler:
+            self.attr_measurementruler.removeListener(self.handle_ruler)
+        self.attr_measurementruler = self.beamviewer.getAttribute("measurementRuler")
+        self.attr_measurementruler.addListener(self.handle_ruler)
+
+        if self.attr_measurementrulerwidth:
+            self.attr_measurementrulerwidth.removeListener(self.handle_ruler_calibration)
+        self.attr_measurementrulerwidth = self.beamviewer.getAttribute("measurementRulerWidth")
+        self.attr_measurementrulerwidth.addListener(self.handle_ruler_calibration)
+
+        if self.attr_measurementrulerheight:
+            self.attr_measurementrulerheight.removeListener(self.handle_ruler_calibration)
+        self.attr_measurementrulerheight = self.beamviewer.getAttribute("measurementRulerHeight")
+        self.attr_measurementrulerheight.addListener(self.handle_ruler_calibration)
+
         # read image if possible
         self._update_image()
 
@@ -157,9 +209,12 @@ class BeamViewerImageWidget(TaurusWidget):
         self.update_image(frame_number)
 
     def _update_image(self, frame_number=-1):
-        imagedata = self.beamviewer.GetImage(frame_number)
-        type_, image = self.codec.decode(imagedata)
-        self.imageitem.setImage(image.T, autoLevels=False, autoDownsample=True)
+        try:
+            imagedata = self.beamviewer.GetImage(frame_number)
+            type_, self.image = self.codec.decode(imagedata)
+            self.imageitem.setImage(self.image.T, autoLevels=False, autoDownsample=True)
+        except PyTango.DevFailed:
+            pass
 
     def handle_framenumber(self, evt_src, evt_type, evt_value):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
@@ -211,9 +266,10 @@ class BeamViewerImageWidget(TaurusWidget):
 
     # lots of repetition here; refactor!
 
-    def handle_lines_changed(self):
-        x, y = self.verline.value(), self.horline.value()
-        self.linepos_label.setText("Lines: x %d, y %d" % (x, y))
+    def update_linepos_label(self):
+        pos = self.verline.value(), self.horline.value()
+        x, y = self.convert_coord(pos)
+        self.linepos_label.setText("Lines %s" % self._point_format % (x, y))
 
     def handle_lines_start(self):
         self._line_dragged = True
@@ -233,13 +289,15 @@ class BeamViewerImageWidget(TaurusWidget):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
                         PyTango.EventType.CHANGE_EVENT):
             pos = evt_value.value
-            self.hline_trigger.emit(pos)
+            if not self._line_dragged:
+                self.hline_trigger.emit(pos)
 
     def handle_vline(self, evt_src, evt_type, evt_value):
         if evt_type in (PyTango.EventType.PERIODIC_EVENT,
                         PyTango.EventType.CHANGE_EVENT):
             pos = evt_value.value
-            self.vline_trigger.emit(pos)
+            if not self._line_dragged:
+                self.vline_trigger.emit(pos)
 
     def show_histogram(self, show=True):
         if show:
@@ -247,14 +305,106 @@ class BeamViewerImageWidget(TaurusWidget):
         else:
             self.graphics.removeItem(self.hist)
 
+    def show_ruler(self, show=True):
+        if show:
+            self.imageplot.addItem(self.ruler)
+        else:
+            self.imageplot.removeItem(self.ruler)
+
+    def handle_ruler_start(self):
+        self._ruler_dragged = True
+
+    def handle_ruler_changed(self):
+        print "handle_ruler_changed"
+        self._ruler_dragged = False
+        self._ruler = self.ruler.saveState()
+        self.calibrate_axes()
+        self.update_linepos_label()
+        self.beamviewer.write_attribute("measurementRuler", json.dumps(self._ruler))
+
+    def handle_ruler(self, evt_src, evt_type, evt_data):
+        if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
+                                                    PyTango.EventType.CHANGE_EVENT):
+            self._ruler = json.loads(evt_data.value)
+            self.ruler_trigger.emit()
+
+    def update_ruler(self):
+        if not self._ruler_dragged:
+            self.ruler.setState(self._ruler)
+            self.calibrate_axes()
+
+    def handle_ruler_calibration(self, evt_src, evt_type, evt_data):
+        if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
+                                                    PyTango.EventType.CHANGE_EVENT):
+            print "ruler calibration changed", evt_src.name, evt_data.value
+            if evt_src.name.endswith("Width"):
+                self._ruler_calibration[0] = evt_data.value
+            elif evt_src.name.endswith("Height"):
+                self._ruler_calibration[1] = evt_data.value
+            self.ruler_calibration_trigger.emit()
+
+    def calibrate_axes(self):
+
+        x1, y1 = self._ruler["pos"]
+        w, h = self._ruler["size"]
+        rw, rh = self._ruler_calibration
+
+        xscale = rw / w
+        yscale = rh / h
+        self.scale = (xscale, yscale)
+        print self.scale
+
+        self.center = (x1 + w/2., y1 + h/2.)
+
+    def convert_coord(self, pos):
+        if self._use_calibration:
+            x, y = pos
+            cx, cy = self.center
+            sx, sy = self.scale
+            return (x - cx)*sx, (y - cy)*sy
+        return pos
+
+    # def _calibrate_axes(self):
+
+    #     #oldpos = self.imageitem.pos()  # get the previous offset
+
+    #     x1, y1 = self._ruler["pos"]
+    #     #x1 -= oldpos.x()
+    #     #y1 -= oldpos.y()
+    #     w, h = self._ruler["size"]
+    #     rw, rh = self._ruler_calibration["size"]
+
+    #     # scale the axes
+    #     xscale = rw / w
+    #     yscale = rh / h
+    #     self.imageplot.getAxis("bottom").setScale(xscale)
+    #     self.imageplot.getAxis("left").setScale(yscale)
+
+    #     # reposition the image, to get the origin at the right place
+    #     xoffset = x1 + w/2.
+    #     yoffset = y1 + h/2.
+    #     self.imageitem.setPos(-xoffset, -yoffset)
+
+    #     # reposition the ruler
+    #     self.ruler.setPos((-w/2., -h/2.), finish=False)
+
+    #     roix, roiy = self._roi[0]
+    #     self.roi.setPos((roix-xoffset, roiy-yoffset), finish=False)
+
+    #     # recenter the view
+    #     newpos = self.imageitem.pos()
+    #     vbox = self.imageplot.getViewBox()
+    #     vbox.translateBy(t=((newpos.x() - oldpos.x()), (newpos.y() - oldpos.y())))
+
     @throttle(seconds=0.1)
     def handle_mouse_move(self, pos):
         if self.imageplot.sceneBoundingRect().contains(pos):
             mouse_point = self.imageplot.vb.mapSceneToView(pos)
             if (0 <= mouse_point.x() < self.imageitem.width() and
-                0 <= mouse_point.y() < self.imageitem.height()):
-                self.mousepos_label.setText("Mouse: x %d, y %d" %
-                                            (mouse_point.x(), mouse_point.y()))
+                    0 <= mouse_point.y() < self.imageitem.height()):
+                x, y = self.convert_coord((mouse_point.x(), mouse_point.y()))
+                self.mousepos_label.setText("Mouse %s" % self._point_format % (x, y))
+
             else:
                 self.mousepos_label.setText("Mouse: -")
 
