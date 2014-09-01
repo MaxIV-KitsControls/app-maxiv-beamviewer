@@ -14,6 +14,7 @@ import numpy as np
 import pyqtgraph as pg
 import PyTango
 from PIL import Image
+from taurus.qt import QtCore, QtGui
 from taurus.core.util import CodecFactory
 from taurus.qt.qtgui.panel import TaurusWidget
 from taurus.qt import QtGui, QtCore
@@ -237,9 +238,16 @@ class LimaCameraWidget(TaurusWidget):
         # Calibration
         self.ui.calib_use_checkbox.setChecked(self.imagewidget._use_calibration)
         self.ui.calib_use_checkbox.stateChanged.connect(self.imagewidget.use_calibration)
-        self.ui.calib_rect_label.setModel("%s/measurementRuler" % bviewer)
-        self.ui.calib_rect_width_lineedit.setModel("%s/measurementRulerWidth" % bviewer)
-        self.ui.calib_rect_height_lineedit.setModel("%s/measurementRulerHeight" % bviewer)
+        #self.ui.calib_rect_label.setModel("%s/measurementRuler" % bviewer)
+        self.ui.calib_actual_width_spinbox.setModel("%s/measurementRulerWidth" % bviewer)
+        self.ui.calib_actual_height_spinbox.setModel("%s/measurementRulerHeight" % bviewer)
+
+        self.ui.calib_left_spinbox.valueChanged.connect(self.handle_ruler)
+        self.ui.calib_top_spinbox.valueChanged.connect(self.handle_ruler)
+        self.ui.calib_width_spinbox.valueChanged.connect(self.handle_ruler)
+        self.ui.calib_height_spinbox.valueChanged.connect(self.handle_ruler)
+
+        #self.imagewidget.ruler_trigger.connect
 
     def get_metadata(self):
         "Collect various data about the latest image"
@@ -466,6 +474,24 @@ class LimaCameraWidget(TaurusWidget):
             self.xprof.offset = 0
             self.yprof.scale = 1.0
             self.yprof.offset = 0
+        self.update_calibration()
+
+    def handle_ruler(self):
+        data = {"angle": 0.0,
+                "pos": [self.ui.calib_left_spinbox.value(),
+                        self.ui.calib_top_spinbox.value()],
+                "size": [self.ui.calib_width_spinbox.value(),
+                         self.ui.calib_height_spinbox.value()]}
+        print data
+        self.bviewer.getAttribute("measurementRuler").write(json.dumps(data))
+
+    def update_calibration(self):
+        data = self.imagewidget._ruler
+        print "update_calibration", data
+        self.ui.calib_left_spinbox.setValue(data["pos"][0])
+        self.ui.calib_top_spinbox.setValue(data["pos"][1])
+        self.ui.calib_width_spinbox.setValue(data["size"][0])
+        self.ui.calib_height_spinbox.setValue(data["size"][1])
 
 
 def main():
