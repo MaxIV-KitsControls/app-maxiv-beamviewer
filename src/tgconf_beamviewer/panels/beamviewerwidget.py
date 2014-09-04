@@ -344,17 +344,16 @@ class BeamViewerImageWidget(TaurusWidget):
             self.ruler_calibration_trigger.emit()
 
     def calibrate_axes(self):
+        if self._ruler:
+            x1, y1 = self._ruler["pos"]
+            w, h = self._ruler["size"]
+            rw, rh = self._ruler_calibration
 
-        x1, y1 = self._ruler["pos"]
-        w, h = self._ruler["size"]
-        rw, rh = self._ruler_calibration
+            xscale = rw / w
+            yscale = rh / h
+            self.scale = (xscale, yscale)
 
-        xscale = rw / w
-        yscale = rh / h
-        self.scale = (xscale, yscale)
-        print self.scale
-
-        self.center = (x1 + w/2., y1 + h/2.)
+            self.center = (x1 + w/2., y1 + h/2.)
 
     def convert_coord(self, pos):
         if self._use_calibration:

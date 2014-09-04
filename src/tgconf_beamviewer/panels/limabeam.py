@@ -397,7 +397,12 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui.acq_framenumber_label.setText(str(frame_number))
 
-        bpm_result = self.bviewer.GetBPMResult(frame_number)
+        try:
+            bpm_result = self.bviewer.GetBPMResult(frame_number)
+        except PyTango.DevFailed:
+            print ("Could not get BPM result for frame %d. Too old?" %
+                   frame_number)
+            return
         self._bpm_result = self.json_codec.decode(bpm_result)[1]
 
         fmt = "%.2f"
@@ -443,7 +448,7 @@ class LimaCameraWidget(TaurusWidget):
             self.ui.roi_label.setText("x: %d, y: %d, w: %d, h: %d" % (x, y, w, h))
 
     def _get_offset(self):
-        if self.imagewidget._use_calibration:
+        if self.imagewidget._use_calibration and self.imagewidget._ruler:
             ruler = self.imagewidget._ruler
             rx, ry = ruler["pos"]
             rw, rh = ruler["size"]
@@ -481,11 +486,12 @@ class LimaCameraWidget(TaurusWidget):
         self.bviewer.getAttribute("measurementRuler").write(json.dumps(data))
 
     def update_calibration(self):
-        data = self.imagewidget._ruler
-        self.ui.calib_left_spinbox.setValue(data["pos"][0])
-        self.ui.calib_top_spinbox.setValue(data["pos"][1])
-        self.ui.calib_width_spinbox.setValue(data["size"][0])
-        self.ui.calib_height_spinbox.setValue(data["size"][1])
+        if self.imagewidget._ruler:
+            data = self.imagewidget._ruler
+            self.ui.calib_left_spinbox.setValue(data["pos"][0])
+            self.ui.calib_top_spinbox.setValue(data["pos"][1])
+            self.ui.calib_width_spinbox.setValue(data["size"][0])
+            self.ui.calib_height_spinbox.setValue(data["size"][1])
 
 
 def main():
