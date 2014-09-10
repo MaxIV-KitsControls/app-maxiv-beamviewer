@@ -171,6 +171,7 @@ class LimaCameraWidget(TaurusWidget):
         self.imagewidget.ruler_trigger.connect(self.handle_calibration)
         self.imagewidget.ruler_calibration_trigger.connect(self.handle_calibration)
         self.ui.calib_use_checkbox.stateChanged.connect(self.handle_calibration)
+        self.ui.calib_use_checkbox.stateChanged.connect(self.imagewidget.use_calibration)
 
     def setModel(self, model):
 
@@ -237,7 +238,6 @@ class LimaCameraWidget(TaurusWidget):
 
         # Calibration
         self.ui.calib_use_checkbox.setChecked(self.imagewidget._use_calibration)
-        self.ui.calib_use_checkbox.stateChanged.connect(self.imagewidget.use_calibration)
         #self.ui.calib_rect_label.setModel("%s/measurementRuler" % bviewer)
         self.ui.calib_actual_width_spinbox.setModel("%s/measurementRulerWidth" % bviewer)
         self.ui.calib_actual_height_spinbox.setModel("%s/measurementRulerHeight" % bviewer)
