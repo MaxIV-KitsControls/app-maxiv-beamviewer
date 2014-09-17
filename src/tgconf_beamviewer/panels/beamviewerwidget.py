@@ -149,10 +149,10 @@ class BeamViewerImageWidget(TaurusWidget):
         self._use_calibration = value
         self._point_format = "[mm]: %.3f, %.3f" if value else "[px]: %d, %d"
 
-    def setModel(self, device):
+    def setModel(self, bviewer):
 
-        self.limaccd = Device(str(device))
-        bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
+        #self.limaccd = Device(str(device))
+        #bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
 
         TaurusWidget.setModel(self, bviewer)
         self.beamviewer = self.getModelObj()

@@ -119,7 +119,7 @@ def acquisition_stopped(camera):
 
 class LimaCameraWidget(TaurusWidget):
 
-    limaccd = None
+    #limaccd = None
     trigger = QtCore.pyqtSignal()
     bpm_trigger = QtCore.pyqtSignal(int)
 
@@ -128,6 +128,8 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui = Ui_Camera()
         self.ui.setupUi(self)
+        #self.ui.Camera.resize(800, 600)
+        self.resize(800, 600)
         self.ui.splitter.setSizes([10000, 1])  # set the splitter weights
         self.imagewidget = BeamViewerImageWidget()
         self.ui.camera_image_widget.layout().addWidget(self.imagewidget)
@@ -135,6 +137,7 @@ class LimaCameraWidget(TaurusWidget):
         self._save_path = ""
         self._bpm_result = {}
         self._frame_number = -1
+
 
         self.bviewer = None
 
@@ -175,14 +178,18 @@ class LimaCameraWidget(TaurusWidget):
 
     def setModel(self, model):
 
+        #super(LimaCameraWidget, self).setModel(model)
+
+        bviewer = model
+
         # If we're switching cameras, we first stop the previous one
         if self.bviewer:
             self.stop_acq()
 
+        self.setWindowTitle(model)
+
         self._devicename = model
-        self.limaccd = Device(str(model))
-        bviewer = self.bviewer = self.limaccd.getPluginDeviceNameFromType("beamviewer")
-        TaurusWidget.setModel(self, bviewer)
+        TaurusWidget.setModel(self, model)
 
         self.bviewer = self.getModelObj()
         self.acq_status = self.bviewer.getAttribute("AcqStatus")
@@ -195,8 +202,8 @@ class LimaCameraWidget(TaurusWidget):
         self.imagewidget.setModel(model)
 
         # Acquisition settings
-        self.ui.camera_type_label.setText(self.limaccd.camera_type)
-        self.ui.camera_model_label.setText(self.limaccd.camera_model)
+        self.ui.camera_type_label.setText(self.bviewer.cameraType)
+        self.ui.camera_model_label.setText(self.bviewer.cameraModel)
         self.ui.acq_expo_time.setModel("%s/Exposure" % bviewer)
         self.ui.gain_label.setModel("%s/Gain" % bviewer)
         self.ui.acq_status_label.setModel("%s/AcqStatus" % bviewer)
@@ -208,7 +215,7 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.trigger_mode_combobox.setCurrentIndex(0 if self.bviewer.TriggerMode == 0 else 1)
         self.ui.trigger_mode_combobox.blockSignals(False)
 
-        if self.limaccd.camera_type == "Simulator":
+        if self.bviewer.cameraType == "Simulator":
             # This is a tamporary fix: If we're using a simulator, set the depth to
             # Bpp16, since teh codec doesn't seem to support 32 bit (default).
             self.bviewer.getAttribute("ImageType").write(8)
@@ -220,7 +227,8 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.image_bin_spinbox.setValue(self.bviewer.Binning)
         self.ui.image_bin_spinbox.blockSignals(False)
 
-        self.allowed_rotations = sorted(self.limaccd.getAttrStringValueList("image_rotation"))
+        #self.allowed_rotations = sorted(self.limaccd.getAttrStringValueList("image_rotation"))
+        self.allowed_rotations = ["NONE", "90", "180", "270"]
         self.ui.image_rotation_combobox.blockSignals(True)
         self.ui.image_rotation_combobox.setValueNames(
             zip(self.allowed_rotations, self.allowed_rotations))
@@ -260,7 +268,7 @@ class LimaCameraWidget(TaurusWidget):
                                             .strftime('%Y-%m-%d %H:%M:%S')
         metadata["timestamp"] = timestamp
         metadata["camera_device"] = self._devicename
-        metadata["camera_type"] = self.limaccd.camera_type
+        metadata["camera_type"] = self.bviewer.cameraType
 
         metadata["width"] = {"value": self.bviewer.Width, "unit": "pixel"}
         metadata["height"] = {"value": self.bviewer.Height, "unit": "pixel"}
