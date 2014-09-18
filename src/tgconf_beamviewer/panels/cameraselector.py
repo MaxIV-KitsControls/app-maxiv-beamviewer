@@ -5,14 +5,14 @@ from PyTango import Database
 
 class CameraSelector(QtGui.QComboBox):
     domain = 'lima'
-    family = 'limaccd'
+    family = 'beamviewer'
     pos = '__si'
     default = float('inf')
 
     def __init__(self, parent=None):
         QtGui.QComboBox.__init__(self, parent)
         self._addItems()
-    
+
     def _addItems(self):
         # Access the database
         db = Database()
