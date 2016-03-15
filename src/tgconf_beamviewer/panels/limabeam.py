@@ -128,7 +128,7 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui = Ui_Camera()
         self.ui.setupUi(self)
-        self.resize(1200, 1000)
+        self.resize(1400, 1000)
         self.ui.tabWidget.setCurrentIndex(0)
         self.ui.splitter.setSizes([10000, 1])  # set the splitter weights
         self.imagewidget = BeamViewerImageWidget()
