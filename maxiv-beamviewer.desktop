@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=MAX IV Beam Viewer
+Name=Beam Viewer
 Exec=ctbeamviewer
 Type=Application
 Categories=MAXIV;Science;
