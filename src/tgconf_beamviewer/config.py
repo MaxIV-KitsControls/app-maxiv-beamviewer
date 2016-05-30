@@ -120,7 +120,7 @@ yag = PanelDescription(
 motors = PanelDescription(
     "Motors",
     classname="TaurusForm",
-    model=['I-GR00-VAC-SCRP-03', 'I-G00-DIA-SCRNM-02']
+    model=['R3_301L_SCRP_03-V', 'B320B-O-OPT-BAFF-03']
 )
 
 camera_selector = PanelDescription(
