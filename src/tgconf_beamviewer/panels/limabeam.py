@@ -148,8 +148,17 @@ class LimaCameraWidget(TaurusWidget):
 
         self.ui.start_acquisition_button.clicked.connect(self.start_acq)
         self.ui.stop_acquisition_button.clicked.connect(self.stop_acq)
-        self.ui.trigger_mode_combobox.currentIndexChanged.connect(
-            self.handle_trigger_mode)
+
+        allowed_trigger_modes = [
+            ("INTERNAL_TRIGGER", 0),       # Lima.Core.IntTrig
+            ("INTERNAL_TRIGGER_MULTI", 1), # Lima.Core.IntTrigMult
+            ("EXTERNAL_TRIGGER", 2),       # Lima.Core.ExtTrigSingle
+            ("EXTERNAL_TRIGGER_MULTI", 3), # Lima.Core.ExtTrigMult
+        ]
+
+        self.ui.trigger_mode_combobox.setValueNames(allowed_trigger_modes)
+        self.ui.trigger_mode_combobox.setModel("/TriggerMode")
+        self.ui.trigger_mode_combobox.setUseParentModel(True)
 
         self.ui.image_bin_spinbox.valueChanged.connect(self.handle_image_bin)
         self.ui.image_save_button.clicked.connect(self.handle_save)
@@ -207,13 +216,6 @@ class LimaCameraWidget(TaurusWidget):
         self.ui.acq_expo_time.setModel("%s/Exposure" % bviewer)
         self.ui.gain_label.setModel("%s/Gain" % bviewer)
         self.ui.acq_status_label.setModel("%s/AcqStatus" % bviewer)
-
-        #self.allowed_trigger_modes = self.limaccd.getAttrStringValueList("acq_trigger_mode")
-        self.allowed_trigger_modes = ["INTERNAL_TRIGGER", "EXTERNAL_TRIGGER"]
-        self.ui.trigger_mode_combobox.blockSignals(True)
-        self.ui.trigger_mode_combobox.setValueNames(zip(self.allowed_trigger_modes, self.allowed_trigger_modes))
-        self.ui.trigger_mode_combobox.setCurrentIndex(0 if self.bviewer.TriggerMode == 0 else 1)
-        self.ui.trigger_mode_combobox.blockSignals(False)
 
         if self.bviewer.cameraType == "Simulator":
             # This is a tamporary fix: If we're using a simulator, set the depth to
@@ -317,12 +319,6 @@ class LimaCameraWidget(TaurusWidget):
         rotation = self.allowed_rotations[n]
         with acquisition_stopped(self):
             self.bviewer.getAttribute("Rotation").write(rotation)
-
-    def handle_trigger_mode(self, n):
-        """Change image_trigger_mode"""
-        mode = 0 if n == 0 else 2  # Internal = 0, External = 2
-        with acquisition_stopped(self):
-            self.bviewer.getAttribute("TriggerMode").write(mode)
 
     def handle_image_bin(self, binning):
         """Change image binning"""
