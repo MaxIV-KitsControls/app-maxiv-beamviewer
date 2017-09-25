@@ -1,5 +1,8 @@
 
-from taurus.qt import QtCore, QtGui
+try:
+    from taurus.qt import QtGui, QtCore
+except ImportError:
+    from taurus.external.qt import QtGui, QtCore
 from PyTango import Database
 
 
