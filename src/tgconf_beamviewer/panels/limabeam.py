@@ -14,10 +14,15 @@ import numpy as np
 import pyqtgraph as pg
 import PyTango
 from PIL import Image
-from taurus.qt import QtCore, QtGui
 from taurus.core.util import CodecFactory
-from taurus.qt.qtgui.panel import TaurusWidget
-from taurus.qt import QtGui, QtCore
+try:
+    from taurus.qt.qtgui.panel import TaurusWidget
+except ImportError:
+    from taurus.qt.qtgui.container import TaurusWidget
+try:
+    from taurus.qt import QtGui, QtCore
+except ImportError:
+    from taurus.external.qt import QtGui, QtCore
 from taurus import Attribute, Device
 
 from camera_ui import Ui_Camera

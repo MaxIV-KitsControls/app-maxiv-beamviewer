@@ -4,8 +4,14 @@ import json
 from functools import wraps, partial
 
 from taurus import Attribute, Device
-from taurus.qt.qtgui.panel import TaurusWidget
-from taurus.qt import QtGui, QtCore
+try:
+    from taurus.qt.qtgui.panel import TaurusWidget
+except ImportError:
+    from taurus.qt.qtgui.container import TaurusWidget
+try:
+    from taurus.qt import QtGui, QtCore
+except ImportError:
+    from taurus.external.qt import QtGui, QtCore
 from taurus.core.util import CodecFactory
 from pyqtgraph.Point import *
 import pyqtgraph as pg
