@@ -11,7 +11,6 @@ except ImportError:
     from ordereddict import OrderedDict  # needs to be installed for < 2.7
 
 import numpy as np
-import pyqtgraph as pg
 import PyTango
 from PIL import Image
 from taurus.core.util import CodecFactory
@@ -19,16 +18,20 @@ try:
     from taurus.qt.qtgui.panel import TaurusWidget
 except ImportError:
     from taurus.qt.qtgui.container import TaurusWidget
+
 try:
     from taurus.qt import QtGui, QtCore
 except ImportError:
     from taurus.external.qt import QtGui, QtCore
+
 from taurus import Attribute, Device
 
 from camera_ui import Ui_Camera
 from beamviewerwidget import BeamViewerImageWidget
 
 from util import throttle
+
+import pyqtgraph as pg # move later to avoid "API 'QString' has already been set to version 1" error
 
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
