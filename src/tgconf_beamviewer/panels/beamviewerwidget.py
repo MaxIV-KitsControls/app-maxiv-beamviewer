@@ -332,6 +332,13 @@ class BeamViewerImageWidget(TaurusWidget):
         if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
                                                     PyTango.EventType.CHANGE_EVENT):
             self._ruler = json.loads(evt_data.value)
+            if "pos" not in self._ruler:
+                print "Initializing ruler for first time"
+                x1, y1 = self._ruler[0]
+                w, h = self._ruler[1]
+                self._ruler = {"angle": 0.0,
+                               "pos": [x1, y1],
+                               "size": [w, h]}
             self.ruler_trigger.emit()
 
     def update_ruler(self):
