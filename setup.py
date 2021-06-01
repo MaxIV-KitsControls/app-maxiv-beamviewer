@@ -15,5 +15,6 @@ setup(
     include_package_data=True,
     package_data={'tgconf_beamviewer': ['default.ini', 'images/MAXlogo_liten.jpg']},
     data_files=[('/usr/share/applications', ['maxiv-beamviewer.desktop'])],
+    install_requires = ['pyqtgraph', 'python-taurus', 'python-maxwidgets', 'python-ordereddict'],
     scripts=['scripts/ctbeamviewer']
 )
