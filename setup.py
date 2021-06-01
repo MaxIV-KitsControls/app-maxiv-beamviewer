@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="taurusgui-beamviewer",
-    version="0.12.6",
+    version="0.12.7",
     description="GUI for viewing YAG screens",
     author="Johan Forsberg",
     author_email="johan.forsberg@maxlab.lu.se",
@@ -15,5 +15,6 @@ setup(
     include_package_data=True,
     package_data={'tgconf_beamviewer': ['default.ini', 'images/MAXlogo_liten.jpg']},
     data_files=[('/usr/share/applications', ['maxiv-beamviewer.desktop'])],
+    install_requires = ['pyqtgraph', 'python-taurus', 'python-maxwidgets', 'python-ordereddict'],
     scripts=['scripts/ctbeamviewer']
 )
