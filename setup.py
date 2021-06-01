@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="taurusgui-beamviewer",
-    version="0.12.6",
+    version="0.12.7",
     description="GUI for viewing YAG screens",
     author="Johan Forsberg",
     author_email="johan.forsberg@maxlab.lu.se",
