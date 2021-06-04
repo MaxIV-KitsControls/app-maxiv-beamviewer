@@ -314,7 +314,7 @@ class LimaCameraWidget(TaurusWidget):
             self.bviewer.Start()
             self.bviewer.StartAcquisition()
         except PyTango.DevFailed as e:
-            print "Trouble starting: %s" % e
+            print ("Trouble starting: %s" % e)
 
     def stop_acq(self):
         """Tell camera to stop acquiring images"""

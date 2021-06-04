@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -41,7 +41,7 @@ class Ui_Camera(object):
         self.camera_image_widget.setMinimumSize(QtCore.QSize(9, 0))
         self.camera_image_widget.setObjectName(_fromUtf8("camera_image_widget"))
         self.cameraImageContainer = QtGui.QVBoxLayout(self.camera_image_widget)
-        self.cameraImageContainer.setMargin(0)
+        self.cameraImageContainer.setContentsMargins(0, 0, 0, 0)
         self.cameraImageContainer.setObjectName(_fromUtf8("cameraImageContainer"))
         self.tabWidget = QtGui.QTabWidget(self.splitter)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)

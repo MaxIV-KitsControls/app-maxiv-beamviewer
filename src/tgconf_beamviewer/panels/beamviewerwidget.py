@@ -321,7 +321,7 @@ class BeamViewerImageWidget(TaurusWidget):
         self._ruler_dragged = True
 
     def handle_ruler_changed(self):
-        print "handle_ruler_changed"
+        print ("handle_ruler_changed")
         self._ruler_dragged = False
         self._ruler = self.ruler.saveState()
         self.calibrate_axes()
@@ -333,7 +333,7 @@ class BeamViewerImageWidget(TaurusWidget):
                                                     PyTango.EventType.CHANGE_EVENT):
             self._ruler = json.loads(evt_data.value)
             if "pos" not in self._ruler:
-                print "Initializing ruler for first time"
+                print ("Initializing ruler for first time")
                 x1, y1 = self._ruler[0]
                 w, h = self._ruler[1]
                 self._ruler = {"angle": 0.0,
@@ -349,7 +349,7 @@ class BeamViewerImageWidget(TaurusWidget):
     def handle_ruler_calibration(self, evt_src, evt_type, evt_data):
         if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
                                                     PyTango.EventType.CHANGE_EVENT):
-            print "ruler calibration changed", evt_src.name, evt_data.value
+            print ("ruler calibration changed", evt_src.name, evt_data.value)
             if evt_src.name.endswith("Width"):
                 self._ruler_calibration[0] = evt_data.value
             elif evt_src.name.endswith("Height"):
