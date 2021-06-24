@@ -1,6 +1,6 @@
 
 from taurus.qt.qtgui.panel import TaurusForm
-from yagscreentv import YAGScreenTV
+from .yagscreentv import YAGScreenTV
 
 class YAGForm(TaurusForm):
     

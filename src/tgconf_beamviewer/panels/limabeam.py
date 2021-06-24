@@ -26,10 +26,10 @@ except ImportError:
 
 from taurus import Attribute, Device
 
-from camera_ui import Ui_Camera
-from beamviewerwidget import BeamViewerImageWidget
+from .camera_ui import Ui_Camera
+from .beamviewerwidget import BeamViewerImageWidget
 
-from util import throttle
+from .util import throttle
 
 import pyqtgraph as pg # move later to avoid "API 'QString' has already been set to version 1" error
 
