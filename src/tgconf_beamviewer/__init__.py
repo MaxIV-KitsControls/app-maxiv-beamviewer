@@ -23,4 +23,4 @@
 ##
 ###########################################################################
 
-from .config import *
+from tgconf_beamviewer.config import *

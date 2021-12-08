@@ -1,6 +1,6 @@
 
 from taurus.qt.qtgui.panel import TaurusForm
-from .yagscreentv import YAGScreenTV
+from tgconf_beamviewer.panels.yagscreentv import YAGScreenTV
 
 class YAGForm(TaurusForm):
     

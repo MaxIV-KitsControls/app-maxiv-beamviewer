@@ -18,7 +18,7 @@ import pyqtgraph as pg
 
 import PyTango
 
-from .util import throttle
+from tgconf_beamviewer.panels.util import throttle
 
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
