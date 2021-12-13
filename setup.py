@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="taurusgui-beamviewer",
@@ -11,10 +11,9 @@ setup(
     license="GPLv3",
     url="http://www.maxlab.lu.se",
     package_dir={'': 'src'},
-    packages=['tgconf_beamviewer', 'tgconf_beamviewer.panels'],
-    include_package_data=True,
+    packages=find_packages(where='src'),
     package_data={'tgconf_beamviewer': ['default.ini', 'images/MAXlogo_liten.jpg']},
     data_files=[('/usr/share/applications', ['maxiv-beamviewer.desktop'])],
-    install_requires = ['pyqtgraph', 'taurus', 'python-maxwidgets', 'ordereddict', 'pillow'],
+    install_requires=['pyqtgraph', 'taurus', 'maxwidgets', 'pillow'],
     scripts=['scripts/ctbeamviewer']
 )

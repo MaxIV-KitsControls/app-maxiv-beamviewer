@@ -1,5 +1,5 @@
 import sys
-import PyTango
+import tango
 try:
     from taurus.qt import QtGui, QtCore
 except ImportError:
@@ -17,7 +17,7 @@ from taurus.qt.qtgui.panel.taurusvalue import \
 
 from taurus.qt.qtgui.dialog import TaurusMessageBox
 
-State = PyTango.DevState
+State = tango.DevState
 
 from taurus.qt.qtgui.display.taurusled import _TaurusLedController
 
