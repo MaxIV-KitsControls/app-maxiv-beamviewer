@@ -5,13 +5,10 @@ import json
 from math import isnan
 import os
 import time
-try:
-    from collections import OrderedDict  # in python 2.7 and up
-except ImportError:
-    from ordereddict import OrderedDict  # needs to be installed for < 2.7
+from collections import OrderedDict
 
 import numpy as np
-import PyTango
+import tango
 from PIL import Image
 from taurus.core.util import CodecFactory
 try:
@@ -26,10 +23,10 @@ except ImportError:
 
 from taurus import Attribute, Device
 
-from camera_ui import Ui_Camera
-from beamviewerwidget import BeamViewerImageWidget
+from tgconf_beamviewer.panels.camera_ui import Ui_Camera
+from tgconf_beamviewer.panels.beamviewerwidget import BeamViewerImageWidget
 
-from util import throttle
+from tgconf_beamviewer.panels.util import throttle
 
 import pyqtgraph as pg # move later to avoid "API 'QString' has already been set to version 1" error
 
@@ -104,8 +101,8 @@ class ProfilePlotWidget(TaurusWidget):
             self.centerline.setPos(self.center)
 
     def handleEvent(self, evt_src, evt_type, evt_value):
-        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT):
+        if evt_type in (tango.EventType.PERIODIC_EVENT,
+                        tango.EventType.CHANGE_EVENT):
             data = evt_value.value
             axis = self.bpm.ROI
             xmin, xmax = axis[0], axis[0] + len(data)
@@ -313,8 +310,8 @@ class LimaCameraWidget(TaurusWidget):
         try:
             self.bviewer.Start()
             self.bviewer.StartAcquisition()
-        except PyTango.DevFailed as e:
-            print "Trouble starting: %s" % e
+        except tango.DevFailed as e:
+            print("Trouble starting: %s" % e)
 
     def stop_acq(self):
         """Tell camera to stop acquiring images"""
@@ -387,8 +384,8 @@ class LimaCameraWidget(TaurusWidget):
         self._show_beam_position = value
 
     def handle_frame_number(self, evt_src, evt_type, evt_data):
-        if (evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                         PyTango.EventType.CHANGE_EVENT) and evt_data):
+        if (evt_type in (tango.EventType.PERIODIC_EVENT,
+                         tango.EventType.CHANGE_EVENT) and evt_data):
             self._frame_number = evt_data.value
             self.bpm_trigger.emit(self._frame_number)
 
@@ -411,8 +408,8 @@ class LimaCameraWidget(TaurusWidget):
 
         try:
             bpm_result = self.bviewer.GetBPMResult(frame_number)
-        except PyTango.DevFailed:
-            print ("Could not get BPM result for frame %d. Too old?" %
+        except tango.DevFailed:
+            print("Could not get BPM result for frame %d. Too old?" %
                    frame_number)
             return
         self._bpm_result = self.json_codec.decode(bpm_result)[1]

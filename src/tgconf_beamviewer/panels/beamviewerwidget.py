@@ -16,9 +16,9 @@ from taurus.core.util import CodecFactory
 from pyqtgraph.Point import *
 import pyqtgraph as pg
 
-import PyTango
+import tango
 
-from util import throttle
+from tgconf_beamviewer.panels.util import throttle
 
 pg.setConfigOption('background', (50, 50, 50))
 pg.setConfigOption('foreground', 'w')
@@ -219,12 +219,12 @@ class BeamViewerImageWidget(TaurusWidget):
             imagedata = self.beamviewer.GetImage(frame_number)
             type_, self.image = self.codec.decode(imagedata)
             self.imageitem.setImage(self.image.T, autoLevels=False, autoDownsample=True)
-        except PyTango.DevFailed:
+        except tango.DevFailed:
             pass
 
     def handle_framenumber(self, evt_src, evt_type, evt_value):
-        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT):
+        if evt_type in (tango.EventType.PERIODIC_EVENT,
+                        tango.EventType.CHANGE_EVENT):
             # The idea is to inform the widget that a new image is available, and
             # then allow it to choose whether to actually read it, depending on
             # max FPS settings, etc. This seems more efficient than sending the
@@ -239,8 +239,8 @@ class BeamViewerImageWidget(TaurusWidget):
             self.imageplot.removeItem(self.roi)
 
     def handle_roi(self, evt_src, evt_type, evt_value):
-        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT,):
+        if evt_type in (tango.EventType.PERIODIC_EVENT,
+                        tango.EventType.CHANGE_EVENT,):
             roi = evt_value.value
             roi = json.loads(roi)
             self.roi_trigger.emit(*roi)
@@ -292,15 +292,15 @@ class BeamViewerImageWidget(TaurusWidget):
         self.horline.setValue(value)
 
     def handle_hline(self, evt_src, evt_type, evt_value):
-        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT):
+        if evt_type in (tango.EventType.PERIODIC_EVENT,
+                        tango.EventType.CHANGE_EVENT):
             pos = evt_value.value
             if not self._line_dragged:
                 self.hline_trigger.emit(pos)
 
     def handle_vline(self, evt_src, evt_type, evt_value):
-        if evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                        PyTango.EventType.CHANGE_EVENT):
+        if evt_type in (tango.EventType.PERIODIC_EVENT,
+                        tango.EventType.CHANGE_EVENT):
             pos = evt_value.value
             if not self._line_dragged:
                 self.vline_trigger.emit(pos)
@@ -321,7 +321,7 @@ class BeamViewerImageWidget(TaurusWidget):
         self._ruler_dragged = True
 
     def handle_ruler_changed(self):
-        print "handle_ruler_changed"
+        print("handle_ruler_changed")
         self._ruler_dragged = False
         self._ruler = self.ruler.saveState()
         self.calibrate_axes()
@@ -329,11 +329,11 @@ class BeamViewerImageWidget(TaurusWidget):
         self.beamviewer.write_attribute("measurementRuler", json.dumps(self._ruler))
 
     def handle_ruler(self, evt_src, evt_type, evt_data):
-        if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                                                    PyTango.EventType.CHANGE_EVENT):
+        if not self._ruler_dragged and evt_type in (tango.EventType.PERIODIC_EVENT,
+                                                    tango.EventType.CHANGE_EVENT):
             self._ruler = json.loads(evt_data.value)
             if "pos" not in self._ruler:
-                print "Initializing ruler for first time"
+                print("Initializing ruler for first time")
                 x1, y1 = self._ruler[0]
                 w, h = self._ruler[1]
                 self._ruler = {"angle": 0.0,
@@ -347,9 +347,9 @@ class BeamViewerImageWidget(TaurusWidget):
             self.calibrate_axes()
 
     def handle_ruler_calibration(self, evt_src, evt_type, evt_data):
-        if not self._ruler_dragged and evt_type in (PyTango.EventType.PERIODIC_EVENT,
-                                                    PyTango.EventType.CHANGE_EVENT):
-            print "ruler calibration changed", evt_src.name, evt_data.value
+        if not self._ruler_dragged and evt_type in (tango.EventType.PERIODIC_EVENT,
+                                                    tango.EventType.CHANGE_EVENT):
+            print("ruler calibration changed", evt_src.name, evt_data.value)
             if evt_src.name.endswith("Width"):
                 self._ruler_calibration[0] = evt_data.value
             elif evt_src.name.endswith("Height"):

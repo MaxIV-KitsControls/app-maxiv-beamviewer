@@ -1,9 +1,9 @@
 import sys
-import PyTango
+import tango
 try:
     from taurus.qt import QtGui, QtCore
 except ImportError:
-    from taurus.external.qt import QtGui, QtCore
+    from taurus.external.qt import QtGui, QtCore, Qt
 try:
     from taurus.qt.qtgui.panel import TaurusWidget
 except ImportError:
@@ -17,7 +17,7 @@ from taurus.qt.qtgui.panel.taurusvalue import \
 
 from taurus.qt.qtgui.dialog import TaurusMessageBox
 
-State = PyTango.DevState
+State = tango.DevState
 
 from taurus.qt.qtgui.display.taurusled import _TaurusLedController
 
@@ -80,7 +80,7 @@ class YAGScreenTVReadWidget(TaurusWidget):
     def __init__(self, *args):
         TaurusWidget.__init__(self, *args)
         self.setLayout(QtGui.QHBoxLayout())
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
         led = YAGLed(self)
 
@@ -101,7 +101,7 @@ class YAGScreenTVWriteWidget(TaurusWidget):
     def __init__(self, *args):
         TaurusWidget.__init__(self, *args)
         self.setLayout(QtGui.QHBoxLayout())
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.moveInButton = TaurusCommandButton(self)
         self.moveInButton.setUseParentModel(True)

@@ -3,7 +3,7 @@ try:
     from taurus.qt import QtGui, QtCore
 except ImportError:
     from taurus.external.qt import QtGui, QtCore
-from PyTango import Database
+from tango import Database
 
 
 class CameraSelector(QtGui.QComboBox):
